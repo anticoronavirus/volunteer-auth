@@ -1,12 +1,12 @@
-fastapi
-uvicorn
-phonenumbers
-aiohttp
-pyJWT
-passlib[bcrypt]
-python-multipart
-sqlalchemy
-databases
-asyncpg
-psycopg2
+fastapi<0.54
+uvicorn<0.12
+phonenumbers<8.13
+aiohttp<3.7
+pyJWT<1.8
+passlib[bcrypt]<1.8
+python-multipart==0.0.5
+sqlalchemy<1.4
+databases<0.3
+asyncpg<0.21
+psycopg2<2.9
 
