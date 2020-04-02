@@ -1,11 +1,11 @@
 import uuid
-from typing import List
 
 import databases
 import sqlalchemy
-from fastapi import FastAPI
 from pydantic import BaseModel
 from sqlalchemy.dialects.postgresql import UUID
+
+import conf
 
 
 # SQLAlchemy specific code, as with any other app
@@ -30,7 +30,7 @@ volunteer = sqlalchemy.Table(
 
 
 engine = sqlalchemy.create_engine(
-    DATABASE_URL, connect_args={"check_same_thread": False}
+    conf.DATABASE_URL, connect_args={"check_same_thread": False}
 )
 # metadata.create_all(engine)
 
