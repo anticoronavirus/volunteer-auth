@@ -9,7 +9,7 @@ class Phone(BaseModel):
     def validate_phone(cls, v):
         try:
             number = phonenumbers.parse(v, "RU")
-        except phonenumbers.NumberParseExceptionException as e:
+        except phonenumbers.NumberParseException as e:
             raise ValueError("Could not parse phone")
         else:
             return phonenumbers.format_number(
