@@ -30,7 +30,7 @@ async def shutdown():
 async def read_root(body: Phone):
     sent = await aero.send_bool(
         body.phone,
-        "ANTICORONA",
+        "NEWS",
         f"Your anticorona volunteer code is: {random.randint(1000, 9999)}")
     if not sent:
         logging.warn(f"delivering sms to {body.phone} failed permanently.")
