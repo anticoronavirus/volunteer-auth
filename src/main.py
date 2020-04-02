@@ -6,7 +6,7 @@ from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 import conf
-from auth import Token, authenticate_user, create_access_token
+from auth import Token, authenticate_user, create_access_token, get_volunteer
 from db import database
 from schema import Phone
 from sms import aero
@@ -28,6 +28,8 @@ async def shutdown():
 
 @app.post("/send-code")
 async def send_registration_code(body: Phone):
+    if get_volunteer(body.phone):
+        return {"status": "exists"}
     sent = await aero.send_bool(
         body.phone,
         "NEWS",
