@@ -8,5 +8,5 @@ python-multipart==0.0.5
 sqlalchemy<1.4
 databases<0.3
 asyncpg<0.21
-psycopg2<2.9
+psycopg2-binary<2.9
 
