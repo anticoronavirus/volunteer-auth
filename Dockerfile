@@ -14,4 +14,4 @@ RUN pip install --trusted-host pypi.org \
 
 COPY src /app
 
-RUN uvicorn main:app
+CMD uvicorn main:app
