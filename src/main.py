@@ -1,16 +1,15 @@
 import logging
+import random
 from datetime import timedelta
 
-import phonenumbers
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 import conf
-from auth import Token, create_access_token, authenticate_user
-from sms import aero
-from schema import Phone
-import db
+from auth import Token, authenticate_user, create_access_token
 from db import database
+from schema import Phone
+from sms import aero
 
 
 app = FastAPI()
@@ -29,7 +28,10 @@ async def shutdown():
 
 @app.post("/send-code")
 async def read_root(body: Phone):
-    sent = await aero.send_bool(body.phone, "ANTICORONA", "Your code is: 123")
+    sent = await aero.send_bool(
+        body.phone,
+        "ANTICORONA",
+        f"Your anticorona volunteer code is: {random.randint(1000, 9999)}")
     if not sent:
         logging.warn(f"delivering sms to {body.phone} failed permanently.")
     return {"status": "ok" if sent else "failed"}
