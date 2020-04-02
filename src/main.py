@@ -27,7 +27,7 @@ async def shutdown():
 
 
 @app.post("/send-code")
-async def read_root(body: Phone):
+async def send_registration_code(body: Phone):
     sent = await aero.send_bool(
         body.phone,
         "NEWS",
