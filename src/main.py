@@ -28,7 +28,7 @@ async def shutdown():
 
 @app.post("/send-code")
 async def send_registration_code(body: Phone):
-    if get_volunteer(body.phone):
+    if await get_volunteer(body.phone):
         return {"status": "exists"}
     sent = await aero.send_bool(
         body.phone,
