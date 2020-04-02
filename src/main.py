@@ -57,15 +57,3 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
-
-
-# @app.get("/db-test")
-# async def login_for_access_token():
-#     query = db.volunteer.select()
-#     resp = await database.fetch_all(query)
-#     import pdb; pdb.set_trace()
-    
-
-# @app.get("/items/{item_id}")
-# async def read_item(item_id: int, q: str = None):
-#     return {"item_id": item_id, "q": q}
