@@ -1,4 +1,5 @@
 from pydantic import BaseModel, validator
+import phonenumbers
 
 
 class Phone(BaseModel):
@@ -8,7 +9,7 @@ class Phone(BaseModel):
     def validate_phone(cls, v):
         try:
             number = phonenumbers.parse(v, "RU")
-        except Exception as e:
+        except phonenumbers.NumberParseExceptionException as e:
             raise ValueError("Could not parse phone")
         else:
             return phonenumbers.format_number(
