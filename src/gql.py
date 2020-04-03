@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 def generate_token(user: Volunteer) -> dict:
     access_token_expires = timedelta(minutes=conf.TOKEN_EXP_MINUTES)
-    access_token = create_access_token(
+    access_token, expires = create_access_token(
         data={
             "sub": user.uid,
             "https://hasura.io/jwt/claims": {
@@ -28,7 +28,9 @@ def generate_token(user: Volunteer) -> dict:
         },
         expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token,
+            "token_type": "bearer",
+            "jwt_token_expiry": expires.timestamp()}
 
 
 class Query(graphene.ObjectType):
@@ -85,7 +87,8 @@ class GetJWT(graphene.Mutation):
 
     @staticmethod
     def set_token_as_cookie(root, info, token):
-        info.context["cookies"] = {"jwt": token["access_token"]}
+        info.context["cookies"] = {"token": token["access_token"],
+                                   "jwt_token_expiry": }
 
 
 class Mutations(graphene.ObjectType):

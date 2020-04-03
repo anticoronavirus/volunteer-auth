@@ -51,7 +51,7 @@ def create_access_token(*, data: dict, expires_delta: timedelta = None):
                              SECRET_KEY,
                              algorithm=ALGORITHM,
                              json_encoder=UUIDEncoder)
-    return encoded_jwt
+    return encoded_jwt, expire
 
 
 async def get_volunteer(phone: str):
