@@ -74,7 +74,7 @@ class GetJWT(graphene.Mutation):
     async def mutate(root, info, phone, password):
         user = await authenticate_user(phone, password)
         if not user:
-            raise GraphQLError("meh")
+            raise GraphQLError("Неверный пользователь или пароль")
             # raise HTTPException(
             #     status_code=status.HTTP_401_UNAUTHORIZED,
             #     detail="Incorrect username or password",
