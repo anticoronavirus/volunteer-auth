@@ -87,7 +87,7 @@ class GetJWT(graphene.Mutation):
         token = generate_token(user)
         GetJWT.set_token_as_cookie(root, info, token)
         return GetJWT(authenticated=True,
-                      access_token=token["access_token"],
+                      access_token=token["access_token"].decode("utf-8"),
                       token_type=token["token_type"])
 
     @staticmethod
