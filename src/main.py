@@ -52,10 +52,12 @@ async def login_for_access_token(
     access_token_expires = timedelta(minutes=conf.TOKEN_EXP_MINUTES)
     access_token = create_access_token(
         data={
-            "sub": "65055ff2-1334-4821-9e8f-a9cdc9dc634c", #user.username,
-            "x-hasura-default-role": "volunteer",
-            "x-hasura-role": "volunteer",
-            "x-hasura-allowed-roles": ["volunteer", "manager"]
+            "sub": user.uid,
+            "https://hasura.io/jwt/claims": {
+                "x-hasura-default-role": "volunteer",
+                "x-hasura-user-id": user.uid,
+                "x-hasura-allowed-roles": ["volunteer"]
+            }
         },
         expires_delta=access_token_expires
     )
