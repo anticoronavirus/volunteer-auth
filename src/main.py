@@ -12,7 +12,7 @@ from db import database, Volunteer
 from schema import Phone, Registration
 from sms import aero
 import graphene
-from starlette.graphql import GraphQLApp
+from gqlapp import LessCrappyGQLApp
 import gql
 from graphql.execution.executors.asyncio import AsyncioExecutor
 
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 app.add_route("/",
-              GraphQLApp(
+              LessCrappyGQLApp(
                   schema=graphene.Schema(query=gql.Query,
                                          mutation=gql.Mutations),
                   executor_class=AsyncioExecutor))

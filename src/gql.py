@@ -80,9 +80,15 @@ class GetJWT(graphene.Mutation):
             raise GraphQLError("Нет такого пользователя")
         if not verify_password(password, user.password):
             raise GraphQLError("Неверный пароль")
+        token = generate_token(user)
+        GetJWT.set_token_as_cookie(root, info, token)
         return GetJWT(
-            **generate_token(user)
+            **token
         )
+
+    @staticmethod
+    def set_token_as_cookie(root, info, token):
+        info.context["cookies"] = {"jwt": token["access_token"]}
 
 
 class Mutations(graphene.ObjectType):
