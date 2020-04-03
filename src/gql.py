@@ -82,9 +82,7 @@ class GetJWT(graphene.Mutation):
             raise GraphQLError("Неверный пароль")
         token = generate_token(user)
         GetJWT.set_token_as_cookie(root, info, token)
-        return GetJWT(
-            **token
-        )
+        return GetJWT()
 
     @staticmethod
     def set_token_as_cookie(root, info, token):
