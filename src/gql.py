@@ -87,8 +87,10 @@ class GetJWT(graphene.Mutation):
 
     @staticmethod
     def set_token_as_cookie(root, info, token):
-        info.context["cookies"] = {"token": token["access_token"],
-                                   "jwt_token_expiry": token["jwt_token_expiry"]}
+        info.context["cookies"] = {
+            "token": token["access_token"],
+            "jwt_token_expiry": token["jwt_token_expiry"]
+        }
 
 
 class Mutations(graphene.ObjectType):
