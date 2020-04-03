@@ -22,6 +22,7 @@ def generate_token(user: Volunteer) -> dict:
             "sub": user.uid,
             "https://hasura.io/jwt/claims": {
                 "x-hasura-default-role": "volunteer",
+                "x-hasura-role": "volunteer",
                 "x-hasura-user-id": user.uid,
                 "x-hasura-allowed-roles": ["volunteer"]
             }
