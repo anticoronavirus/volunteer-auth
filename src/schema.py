@@ -14,9 +14,12 @@ class Phone(BaseModel):
         except phonenumbers.NumberParseException as e:
             raise ValueError("Could not parse phone")
         else:
-            return phonenumbers.format_number(
+            phone = phonenumbers.format_number(
                 number,
                 phonenumbers.PhoneNumberFormat.E164)
+            if len(phone) != 12:
+                raise ValueError("Not a mobile phone")
+            return phone
 
 
 class Registration(BaseModel):

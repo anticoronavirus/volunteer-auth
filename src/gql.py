@@ -9,6 +9,7 @@ from auth import (Token, authenticate_user, create_access_token,
                   create_volunteer, get_volunteer)
 from db import Volunteer
 from graphql import GraphQLError
+from schema import Phone
 
 
 logger = logging.getLogger(__name__)
@@ -46,6 +47,8 @@ class VolunteerSignUp(graphene.Mutation):
 
     @staticmethod
     async def mutate(root, info, phone):
+        # raises error if not valid.
+        Phone(phone=phone)
         if await get_volunteer(phone):
             return VolunteerSignUp(status="exists")
         tpassword = str(random.randint(1000, 9999))
