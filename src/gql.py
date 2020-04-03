@@ -51,7 +51,7 @@ class VolunteerSignUp(graphene.Mutation):
         Phone(phone=phone)
         if await get_volunteer(phone):
             return VolunteerSignUp(status="exists")
-        tpassword = str(random.randint(1000, 9999))
+        tpassword = "test" #str(random.randint(1000, 9999))
         logger.warn(tpassword)
         sent = True
         # sent = await aero.send_bool(
