@@ -7,7 +7,7 @@ AERO_LOGIN = os.getenv("AERO_LOGIN", "")
 AERO_TOKEN = os.getenv("AERO_TOKEN", "")
 SECRET_KEY = os.getenv("SECRET_KEY", "")
 TOKEN_EXP_MINUTES = int(os.getenv("TOKEN_EXP_MINUTES", 5))
-DATABASE_URL = os.getenv("DB_URL", "")
+DATABASE_URL = os.getenv("DATABASE_URL", "")
 
 
 try:
