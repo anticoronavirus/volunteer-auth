@@ -2,13 +2,9 @@ from starlette.graphql import GraphQLApp
 from starlette.requests import Request
 from starlette.types import Receive, Scope, Send
 
-from middleware import CookieSettingMiddleware
-
 
 class LessCrappyGQLApp(GraphQLApp):
     """App that injects our custom directive middleware when calling `schema.execute`."""
-
-    # middleware = [CookieSettingMiddleware()]
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.custom_cookies = {}
