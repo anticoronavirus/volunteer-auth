@@ -21,19 +21,8 @@ async def send(phonestr, from_, text):
                s.post(f"{conf.AERO_URL}/sms/send/",
                       json=params) as resp:
         body = await resp.json()
-
-        # if resp.status > 299:
-        logger.warn("response body: %s", body)
-
+        logger.info("response body: %s", body)
         return body
-
-    #     sms.message_id = resp['id']
-    #     if resp['result'] == 'accepted':
-    #         sms.status = 'sent'
-    #     else:
-    #         sms.status = 'not_delivered'
-    # else:
-    #     sms.status = 'not_delivered'
 
 
 async def send_bool(phonestr, from_, text):
