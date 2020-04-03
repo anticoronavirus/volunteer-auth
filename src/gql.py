@@ -70,8 +70,7 @@ class GetJWT(graphene.Mutation):
         phone = graphene.String()
         password = graphene.String()
 
-    access_token = graphene.String()
-    token_type = graphene.String()
+    authenticated = graphene.Boolean()
 
     @staticmethod
     async def mutate(root, info, phone, password):
@@ -82,7 +81,7 @@ class GetJWT(graphene.Mutation):
             raise GraphQLError("Неверный пароль")
         token = generate_token(user)
         GetJWT.set_token_as_cookie(root, info, token)
-        return GetJWT()
+        return GetJWT(authenticated=True)
 
     @staticmethod
     def set_token_as_cookie(root, info, token):
