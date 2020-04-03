@@ -36,8 +36,8 @@ def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
 
-# def get_password_hash(password):
-#     return pwd_context.hash(password)
+def get_password_hash(password):
+    return pwd_context.hash(password)
 
 
 def create_access_token(*, data: dict, expires_delta: timedelta = None):
@@ -69,3 +69,17 @@ async def authenticate_user(phone: str, password: str):
     if not verify_password(password, user.password):
         return False
     return user
+
+
+async def create_volunteer(phone: str, password: str) -> db.Volunteer:
+    query = db.volunteer.insert().values(
+        fname="",
+        mname="",
+        lname="",
+        email="",
+        blacklist_comment="",
+        phone=phone,
+        role="volunteer",
+        password=get_password_hash(password)).returning(db.volunteer.c.uid)
+    uid = await database.execute(query)
+    return db.Volunteer(phone=phone, uid=uid)

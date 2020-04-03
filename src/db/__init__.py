@@ -36,12 +36,11 @@ engine = sqlalchemy.create_engine(
 
 class Volunteer(BaseModel):
     uid: uuid.UUID
-    fname: str
-    mname: str
-    lname: str
+    fname: str = ""
+    mname: str = ""
+    lname: str = ""
     phone: str
-    email: str
-    blacklisted: bool
-    blacklist_comment: str
-    role: str
-    password: str
+    email: str = ""
+    blacklisted: bool = False
+    blacklist_comment: str = ""
+    role: str = "volunteer"
