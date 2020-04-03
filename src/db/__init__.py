@@ -44,3 +44,4 @@ class Volunteer(BaseModel):
     blacklisted: bool = False
     blacklist_comment: str = ""
     role: str = "volunteer"
+    password: str = ""
