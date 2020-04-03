@@ -6,7 +6,7 @@ import graphene
 
 import conf
 from auth import (Token, authenticate_user, create_access_token,
-                  create_volunteer, get_volunteer)
+                  create_volunteer, get_volunteer, verify_password)
 from db import Volunteer
 from graphql import GraphQLError
 from schema import Phone
