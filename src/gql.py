@@ -39,7 +39,7 @@ def create_token(user_id: Union[UUID, str]) -> dict:
 
 
 def create_refresh_token(user_id: UUID) -> dict:
-    access_token_expires = timedelta(minutes=conf.TOKEN_EXP_MINUTES * 10)
+    access_token_expires = timedelta(minutes=conf.REFRESH_TOKEN_EXP_MINUTES)
     access_token, expires = create_access_token(
         data={
             "sub": user_id,
