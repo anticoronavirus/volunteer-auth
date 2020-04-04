@@ -103,7 +103,7 @@ class GetJWT(graphene.Mutation):
         refresh_token = create_refresh_token(user.uid)
 
         # set refresh token as cookie
-        info.context["cookies"] = {"refresh_token": refresh_token}
+        info.context["cookies"] = {"refresh_token": refresh_token.decode("utf-8")}
 
         return GetJWT(authenticated=True,
                       access_token=token["access_token"].decode("utf-8"),
@@ -113,18 +113,22 @@ class GetJWT(graphene.Mutation):
 
 class RefreshJWT(graphene.Mutation):
     class Arguments:
-        token = graphene.String()
+        pass
 
     authenticated = graphene.Boolean()
     access_token = graphene.String()
     token_type = graphene.String()
 
     @staticmethod
-    async def mutate(root, info, token):
+    async def mutate(root, info):
+        request = info.context['request']
         try:
-            decoded = jwt.decode(token,
+            decoded = jwt.decode(request.cookies['refresh_token'],
                                  SECRET_KEY,
                                  algorithm=ALGORITHM)
+        except KeyError:            
+            raise GraphQLError("Refresh token not found in cookies. "
+                               "Relogin and try again.")
         except:
             raise GraphQLError("Token verification failed.")
         else:
