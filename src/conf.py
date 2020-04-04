@@ -6,8 +6,8 @@ import json
 AERO_URL = "https://gate.smsaero.ru/v2"
 AERO_LOGIN = os.getenv("AERO_LOGIN", "")
 AERO_TOKEN = os.getenv("AERO_TOKEN", "")
-TOKEN_EXP_MINUTES = int(os.getenv("TOKEN_EXP_MINUTES", 1))
-REFRESH_TOKEN_EXP_MINUTES = int(os.getenv("REFRESH_TOKEN_EXP_MINUTES", 2))
+TOKEN_EXP_MINUTES = int(os.getenv("TOKEN_EXP_MINUTES", 15))
+REFRESH_TOKEN_EXP_MINUTES = int(os.getenv("REFRESH_TOKEN_EXP_MINUTES", 60 * 127))
 DATABASE_URL = os.getenv("DATABASE_URL", "")
 JWT_SETTINGS = json.loads(os.getenv("JWT_SECRET",
                                     '{"type": "HS256", "key": "test"}'))
