@@ -91,6 +91,7 @@ class GetJWT(graphene.Mutation):
     authenticated = graphene.Boolean()
     access_token = graphene.String()
     token_type = graphene.String()
+    expires = graphene.Float()
 
     @staticmethod
     async def mutate(root, info, phone, password):
@@ -107,7 +108,8 @@ class GetJWT(graphene.Mutation):
 
         return GetJWT(authenticated=True,
                       access_token=token["access_token"].decode("utf-8"),
-                      token_type=token["token_type"])
+                      token_type=token["token_type"],
+                      expires=token["jwt_token_expiry"])
 
 
 
@@ -118,6 +120,7 @@ class RefreshJWT(graphene.Mutation):
     authenticated = graphene.Boolean()
     access_token = graphene.String()
     token_type = graphene.String()
+
 
     @staticmethod
     async def mutate(root, info):
