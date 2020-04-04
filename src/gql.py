@@ -1,3 +1,4 @@
+from typing import Union
 import jwt
 import logging
 import random
@@ -17,7 +18,7 @@ from uuid import UUID
 logger = logging.getLogger(__name__)
 
 
-def create_token(user_id: UUID) -> dict:
+def create_token(user_id: Union[UUID, str]) -> dict:
     access_token_expires = timedelta(minutes=conf.TOKEN_EXP_MINUTES)
     access_token, expires = create_access_token(
         data={
@@ -100,16 +101,21 @@ class GetJWT(graphene.Mutation):
             raise GraphQLError("Нет такого пользователя")
         if not verify_password(password, user.password):
             raise GraphQLError("Неверный пароль")
-        token = create_token(user.uid)
-        refresh_token = create_refresh_token(user.uid)
+
+        return GetJWT.create_tokens(info, user.uid)
+
+    @classmethod
+    def create_tokens(cls, info, user_id: Union[str, UUID]):
+        token = create_token(user_id)
+        refresh_token = create_refresh_token(user_id)
 
         # set refresh token as cookie
         info.context["cookies"] = {"refresh_token": refresh_token.decode("utf-8")}
 
-        return GetJWT(authenticated=True,
-                      access_token=token["access_token"].decode("utf-8"),
-                      token_type=token["token_type"],
-                      expires=token["jwt_token_expiry"])
+        return cls(authenticated=True,
+                   access_token=token["access_token"].decode("utf-8"),
+                   token_type=token["token_type"],
+                   expires=token["jwt_token_expiry"])
 
 
 class RefreshJWT(graphene.Mutation):
@@ -134,13 +140,16 @@ class RefreshJWT(graphene.Mutation):
         except:
             raise GraphQLError("Token verification failed.")
         else:
-            if not decoded["refr"]:
-                raise GraphQLError("This is not a refresh token.")
-            token = create_token(decoded["sub"])
-            return GetJWT(authenticated=True,
-                          access_token=token["access_token"].decode("utf-8"),
-                          token_type=token["token_type"],
-                          expires=token["jwt_token_expiry"])
+            return GetJWT.create_tokens(info, decoded["sub"])
+        #     raise GraphQLError("Token verification failed.")
+        # else:
+        #     if not decoded["refr"]:
+        #         raise GraphQLError("This is not a refresh token.")
+        #     token = create_token(decoded["sub"])
+        #     return GetJWT(authenticated=True,
+        #                   access_token=token["access_token"].decode("utf-8"),
+        #                   token_type=token["token_type"],
+        #                   expires=token["jwt_token_expiry"])
 
 
 class Mutations(graphene.ObjectType):
