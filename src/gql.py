@@ -96,7 +96,8 @@ class GetJWT(graphene.Mutation):
 
     @staticmethod
     async def mutate(root, info, phone, password):
-        user = await get_volunteer(phone)
+        phone164 = Phone(phone=phone).phone
+        user = await get_volunteer(phone164)
         if not user:
             raise GraphQLError("Нет такого пользователя")
         if not verify_password(password, user.password):
