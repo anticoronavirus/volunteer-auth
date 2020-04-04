@@ -67,8 +67,8 @@ class VolunteerSignUp(graphene.Mutation):
     @staticmethod
     async def mutate(root, info, phone):
         # raises error if not valid.
-        Phone(phone=phone)
-        if await get_volunteer(phone):
+        ph_formatted = Phone(phone=phone).phone
+        if await get_volunteer(ph_formatted):
             return VolunteerSignUp(status="exists")
         tpassword = "test" #str(random.randint(1000, 9999))
         logger.warn(tpassword)
@@ -80,7 +80,7 @@ class VolunteerSignUp(graphene.Mutation):
         if not sent:
             return VolunteerSignUp(status="failed")
         else:
-            volunteer = await create_volunteer(phone, tpassword)
+            volunteer = await create_volunteer(ph_formatted, tpassword)
             return VolunteerSignUp(status="ok", code=tpassword)
 
 
