@@ -1,3 +1,4 @@
+import jwt
 import logging
 import random
 from datetime import timedelta
@@ -6,24 +7,25 @@ import graphene
 
 import conf
 from auth import (Token, authenticate_user, create_access_token,
-                  create_volunteer, get_volunteer, verify_password)
+                  create_volunteer, get_volunteer, verify_password, SECRET_KEY, ALGORITHM)
 from db import Volunteer
 from graphql import GraphQLError
 from schema import Phone
+from uuid import UUID
 
 
 logger = logging.getLogger(__name__)
 
 
-def generate_token(user: Volunteer) -> dict:
+def create_token(user_id: UUID) -> dict:
     access_token_expires = timedelta(minutes=conf.TOKEN_EXP_MINUTES)
     access_token, expires = create_access_token(
         data={
-            "sub": user.uid,
+            "sub": user_id,
             "https://hasura.io/jwt/claims": {
                 "x-hasura-default-role": "volunteer",
                 "x-hasura-role": "volunteer",
-                "x-hasura-user-id": user.uid,
+                "x-hasura-user-id": user_id,
                 "x-hasura-allowed-roles": ["volunteer"]
             }
         },
@@ -32,6 +34,17 @@ def generate_token(user: Volunteer) -> dict:
     return {"access_token": access_token,
             "token_type": "bearer",
             "jwt_token_expiry": expires.timestamp()}
+
+
+def create_refresh_token(user_id: UUID) -> dict:
+    access_token_expires = timedelta(minutes=conf.TOKEN_EXP_MINUTES * 10)
+    access_token, expires = create_access_token(
+        data={
+            "sub": user_id,
+        },
+        expires_delta=access_token_expires
+    )
+    return access_token
 
 
 class Query(graphene.ObjectType):
@@ -84,20 +97,42 @@ class GetJWT(graphene.Mutation):
             raise GraphQLError("Нет такого пользователя")
         if not verify_password(password, user.password):
             raise GraphQLError("Неверный пароль")
-        token = generate_token(user)
-        GetJWT.set_token_as_cookie(root, info, token)
+        token = create_token(user.uid)
+        refresh_token = create_refresh_token(user.uid)
+
+        # set refresh token as cookie
+        info.context["cookies"] = {"refresh_token": refresh_token}
+
         return GetJWT(authenticated=True,
                       access_token=token["access_token"].decode("utf-8"),
                       token_type=token["token_type"])
 
+
+
+class RefreshJWT(graphene.Mutation):
+    class Arguments:
+        token = graphene.String()
+
+    authenticated = graphene.Boolean()
+    access_token = graphene.String()
+    token_type = graphene.String()
+
     @staticmethod
-    def set_token_as_cookie(root, info, token):
-        info.context["cookies"] = {
-            "token": token["access_token"].decode("utf-8"),
-            "jwt_token_expiry": token["jwt_token_expiry"]
-        }
+    async def mutate(root, info, token):
+        try:
+            decoded = jwt.decode(token,
+                                 SECRET_KEY,
+                                 algorithm=ALGORITHM)
+        except:
+            raise GraphQLError("token is invalid")
+        else:
+            token = create_token(decoded["sub"])
+            return GetJWT(authenticated=True,
+                          access_token=token["access_token"].decode("utf-8"),
+                          token_type=token["token_type"])
 
 
 class Mutations(graphene.ObjectType):
     signUp = VolunteerSignUp.Field()
     getToken = GetJWT.Field()
+    refreshToken = RefreshJWT.Field()
