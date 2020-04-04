@@ -22,6 +22,7 @@ def create_token(user_id: UUID) -> dict:
     access_token, expires = create_access_token(
         data={
             "sub": user_id,
+            "refr": False,
             "https://hasura.io/jwt/claims": {
                 "x-hasura-default-role": "volunteer",
                 "x-hasura-role": "volunteer",
@@ -41,6 +42,7 @@ def create_refresh_token(user_id: UUID) -> dict:
     access_token, expires = create_access_token(
         data={
             "sub": user_id,
+            "refr": True
         },
         expires_delta=access_token_expires
     )
@@ -124,8 +126,10 @@ class RefreshJWT(graphene.Mutation):
                                  SECRET_KEY,
                                  algorithm=ALGORITHM)
         except:
-            raise GraphQLError("token is invalid")
+            raise GraphQLError("Token verification failed.")
         else:
+            if not decoded["refr"]:
+                raise GraphQLError("This is not a refresh token.")
             token = create_token(decoded["sub"])
             return GetJWT(authenticated=True,
                           access_token=token["access_token"].decode("utf-8"),
