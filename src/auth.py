@@ -77,7 +77,6 @@ async def create_volunteer(phone: str, password: str) -> db.Volunteer:
         mname="",
         lname="",
         email="",
-        blacklist_comment="",
         phone=phone,
         role="volunteer",
         password=get_password_hash(password)).returning(db.volunteer.c.uid)
