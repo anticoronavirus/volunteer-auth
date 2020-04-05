@@ -22,8 +22,6 @@ volunteer = sqlalchemy.Table(
     sqlalchemy.Column("lname", sqlalchemy.String),
     sqlalchemy.Column("phone", sqlalchemy.String),
     sqlalchemy.Column("email", sqlalchemy.String),
-    sqlalchemy.Column("blacklisted", sqlalchemy.Boolean),
-    sqlalchemy.Column("blacklist_comment", sqlalchemy.String),
     sqlalchemy.Column("role", sqlalchemy.String),
     sqlalchemy.Column("password", sqlalchemy.String),
 )
@@ -41,7 +39,5 @@ class Volunteer(BaseModel):
     lname: str = ""
     phone: str
     email: str = ""
-    blacklisted: bool = False
-    blacklist_comment: str = ""
     role: str = "volunteer"
     password: str = ""
