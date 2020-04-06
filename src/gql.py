@@ -6,16 +6,15 @@ from uuid import UUID
 
 import conf
 import db
-from db import database
 import graphene
 import jwt
 from auth import (ALGORITHM, SECRET_KEY, Token, authenticate_user,
                   create_access_token, create_volunteer, get_password_hash,
                   get_volunteer, verify_password)
+from db import database
 from graphql import GraphQLError
 from schema import Phone
 from sms import aero
-
 
 logger = logging.getLogger(__name__)
 
