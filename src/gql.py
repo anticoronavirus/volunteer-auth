@@ -1,19 +1,18 @@
-from typing import Union
-import jwt
 import logging
 import random
 from datetime import timedelta
-
-import graphene
-
-import conf
-from auth import (Token, authenticate_user, create_access_token,
-                  create_volunteer, get_volunteer, verify_password, SECRET_KEY, ALGORITHM)
-from db import Volunteer
-from graphql import GraphQLError
-from schema import Phone
+from typing import Union
 from uuid import UUID
 
+import conf
+import graphene
+import jwt
+from auth import (ALGORITHM, SECRET_KEY, Token, authenticate_user,
+                  create_access_token, create_volunteer, get_volunteer,
+                  verify_password)
+from graphql import GraphQLError
+from schema import Phone
+from sms import aero
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +61,6 @@ class VolunteerSignUp(graphene.Mutation):
         phone = graphene.String()
 
     status = graphene.String()
-    code = graphene.String(required=False, default_value="")
 
     @staticmethod
     async def mutate(root, info, phone):
@@ -70,18 +68,17 @@ class VolunteerSignUp(graphene.Mutation):
         ph_formatted = Phone(phone=phone).phone
         if await get_volunteer(ph_formatted):
             return VolunteerSignUp(status="exists")
-        tpassword = "test" #str(random.randint(1000, 9999))
+        tpassword = str(random.randint(1000, 9999))
         logger.warn(tpassword)
-        sent = True
-        # sent = await aero.send_bool(
-        #     phone,
-        #     "NEWS",
-        #     f"Your anticorona volunteer code is: {tpassword}")
+        sent = await aero.send_bool(
+            phone,
+            "NEWS",
+            f"Your anticorona volunteer code is: {tpassword}")
         if not sent:
             return VolunteerSignUp(status="failed")
         else:
             volunteer = await create_volunteer(ph_formatted, tpassword)
-            return VolunteerSignUp(status="ok", code=tpassword)
+            return VolunteerSignUp(status="ok")
 
 
 class GetJWT(graphene.Mutation):
