@@ -6,6 +6,7 @@ from uuid import UUID
 
 import conf
 import db
+from db import database
 import graphene
 import jwt
 from auth import (ALGORITHM, SECRET_KEY, Token, authenticate_user,
