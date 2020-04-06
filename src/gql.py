@@ -5,14 +5,16 @@ from typing import Union
 from uuid import UUID
 
 import conf
+import db
 import graphene
 import jwt
 from auth import (ALGORITHM, SECRET_KEY, Token, authenticate_user,
-                  create_access_token, create_volunteer, get_volunteer,
-                  verify_password)
+                  create_access_token, create_volunteer, get_password_hash,
+                  get_volunteer, verify_password)
 from graphql import GraphQLError
 from schema import Phone
 from sms import aero
+
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +68,8 @@ class VolunteerSignUp(graphene.Mutation):
     async def mutate(root, info, phone):
         # raises error if not valid.
         ph_formatted = Phone(phone=phone).phone
-        if await get_volunteer(ph_formatted):
+        volunteer = await get_volunteer(ph_formatted)
+        if volunteer and volunteer.password:
             return VolunteerSignUp(status="exists")
         tpassword = str(random.randint(1000, 9999))
         logger.warn(tpassword)
@@ -77,7 +80,14 @@ class VolunteerSignUp(graphene.Mutation):
         if not sent:
             return VolunteerSignUp(status="failed")
         else:
-            volunteer = await create_volunteer(ph_formatted, tpassword)
+            if volunteer:
+                volunteer.password = get_password_hash(tpassword)
+                query = (db.volunteer.update().
+                         where(db.volunteer.c.uid==volunteer.uid).
+                         values(password=volunteer.password))
+                await database.execute(query)
+            else:
+                volunteer = await create_volunteer(ph_formatted, tpassword)
             return VolunteerSignUp(status="ok")
 
 
