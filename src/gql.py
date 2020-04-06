@@ -76,7 +76,7 @@ class VolunteerSignUp(graphene.Mutation):
         sent = await aero.send_bool(
             phone,
             "NEWS",
-            f"{tpassword} your memedic volunteer code <3")
+            f"{tpassword} is your memedic volunteer code <3")
         if not sent:
             return VolunteerSignUp(status="failed")
         else:
