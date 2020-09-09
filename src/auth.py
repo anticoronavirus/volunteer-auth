@@ -10,8 +10,6 @@ import db
 from db import database
 
 
-SECRET_KEY = conf.SECRET_KEY
-ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = conf.TOKEN_EXP_MINUTES
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -48,8 +46,8 @@ def create_access_token(*, data: dict, expires_delta: timedelta = None):
         expires = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expires})
     encoded_jwt = jwt.encode(to_encode,
-                             SECRET_KEY,
-                             algorithm=ALGORITHM,
+                             conf.SECRET_KEY,
+                             algorithm=conf.ALGORITHM,
                              json_encoder=UUIDEncoder)
     return encoded_jwt, expires
 

@@ -8,7 +8,7 @@ import conf
 import db
 import graphene
 import jwt
-from auth import (ALGORITHM, SECRET_KEY, Token, authenticate_user,
+from auth import (Token, authenticate_user,
                   create_access_token, create_volunteer, get_password_hash,
                   get_volunteer, verify_password)
 from db import database
@@ -140,8 +140,8 @@ class RefreshJWT(graphene.Mutation):
         request = info.context['request']
         try:
             decoded = jwt.decode(request.cookies['refresh_token'],
-                                 SECRET_KEY,
-                                 algorithm=ALGORITHM)
+                                 conf.SECRET_KEY,
+                                 algorithm=conf.ALGORITHM)
         except KeyError:            
             raise GraphQLError("Refresh token not found in cookies. "
                                "Relogin and try again.")
