@@ -10,7 +10,7 @@ TOKEN_EXP_MINUTES = int(os.getenv("TOKEN_EXP_MINUTES", 15))
 REFRESH_TOKEN_EXP_MINUTES = int(os.getenv("REFRESH_TOKEN_EXP_MINUTES", 60 * 127))
 DATABASE_URL = os.getenv("DATABASE_URL", "")
 JWT_SETTINGS = json.loads(os.getenv("JWT_SECRET",
-                                    '{"type": "RS256", "key": "test"}'))
+                                    '{"type": "HS256", "key": "test"}'))
 SECRET_KEY = JWT_SETTINGS["key"]
 ALGORITHM = JWT_SETTINGS["type"]
 
