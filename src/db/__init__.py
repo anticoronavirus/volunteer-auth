@@ -27,9 +27,7 @@ volunteer = sqlalchemy.Table(
 )
 
 
-engine = sqlalchemy.create_engine(
-    conf.DATABASE_URL, connect_args={"check_same_thread": False}
-)
+engine = sqlalchemy.create_engine(conf.DATABASE_URL)
 # metadata.create_all(engine)
 
 class Volunteer(BaseModel):
