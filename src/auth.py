@@ -1,3 +1,4 @@
+from uuid import uuid4
 from datetime import datetime, timedelta
 
 import jwt
@@ -71,6 +72,7 @@ async def authenticate_user(phone: str, password: str):
 
 async def create_volunteer(phone: str, password: str) -> db.Volunteer:
     query = db.volunteer.insert().values(
+        uid=uuid4(),
         fname="",
         mname="",
         lname="",
