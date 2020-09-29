@@ -1,20 +1,14 @@
 import logging
-import random
-from datetime import timedelta
 
-from fastapi import Depends, FastAPI, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
+import graphene
+from fastapi import FastAPI
+from graphql.execution.executors.asyncio import AsyncioExecutor
 
-import conf
+import gql
 from auth import (Token, authenticate_user, create_access_token,
                   create_volunteer, get_volunteer)
-from db import database, Volunteer
-from schema import Phone, Registration
-from sms import aero
-import graphene
+from db import database
 from gqlapp import LessCrappyGQLApp
-import gql
-from graphql.execution.executors.asyncio import AsyncioExecutor
 
 
 logger = logging.getLogger(__name__)
