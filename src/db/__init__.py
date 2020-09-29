@@ -26,8 +26,15 @@ volunteer = sqlalchemy.Table(
     sqlalchemy.Column("password", sqlalchemy.String),
 )
 
+miserables = sqlalchemy.Table(
+    "miserables",
+    metadata,
+    sqlalchemy.Column("token", sqlalchemy.String, primary_key=True),
+    schema=conf.TOKEN_SCHEMA_NAME
+    # sqlalchemy.Column("expires", sqlalchemy.TIMESTAMP(timezone=True)),
+)
 
-engine = sqlalchemy.create_engine(conf.DATABASE_URL)
+# engine = sqlalchemy.create_engine(conf.DATABASE_URL)
 # metadata.create_all(engine)
 
 class Volunteer(BaseModel):

@@ -9,6 +9,7 @@ AERO_TOKEN = os.getenv("AERO_TOKEN", "")
 TOKEN_EXP_MINUTES = int(os.getenv("TOKEN_EXP_MINUTES", 15))
 REFRESH_TOKEN_EXP_MINUTES = int(os.getenv("REFRESH_TOKEN_EXP_MINUTES", 60 * 127))
 DATABASE_URL = os.getenv("DATABASE_URL", "")
+TOKEN_SCHEMA_NAME = os.getenv("TOKEN_SCHEMA_NAME", "les")
 JWT_SETTINGS = json.loads(os.getenv("JWT_SECRET",
                                     '{"type": "HS256", "key": "test"}'))
 SECRET_KEY = JWT_SETTINGS["key"]
