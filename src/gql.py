@@ -118,7 +118,10 @@ class GetJWT(graphene.Mutation):
         refresh_token = create_refresh_token(user_id)
 
         # set refresh token as cookie
-        info.context["cookies"] = {"refresh_token": refresh_token.decode("utf-8")}
+        info.context["cook"].set_cookie("refresh_token",
+                                        refresh_token.decode("utf-8"),
+                                        httponly=True)
+        print(info.context["cook"].cookies)
 
         return cls(authenticated=True,
                    access_token=token["access_token"].decode("utf-8"),
