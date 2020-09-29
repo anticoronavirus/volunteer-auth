@@ -35,5 +35,5 @@ class LessCrappyGQLApp(GraphQLApp):
         request = Request(scope, receive=receive)
         response = await self.handle_graphql(request)
         for k,v in self.custom_cookies.items():            
-            response.set_cookie(k, v, httponly=True)
+            response.set_cookie(k, v, httponly=True, secure=True)
         await response(scope, receive, send)
