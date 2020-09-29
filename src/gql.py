@@ -163,7 +163,18 @@ class RefreshJWT(graphene.Mutation):
         #                   expires=token["jwt_token_expiry"])
 
 
+class Logoff(graphene.Mutation, graphene.ObjectType):
+    status = graphene.String()
+
+    async def mutate(root, info):
+        info.context["cook"].delete_cookie("refresh_token")
+        return Logoff(status="ok")
+        # raise GraphQLError("Refresh token not found in cookies. "
+        #                    "Relogin and try again.")
+
+
 class Mutations(graphene.ObjectType):
     signUp = VolunteerSignUp.Field()
     getToken = GetJWT.Field()
     refreshToken = RefreshJWT.Field()
+    logoff = Logoff.Field()
