@@ -1,8 +1,5 @@
 from unittest.mock import AsyncMock, patch
 
-from starlette.testclient import TestClient
-
-from main import app
 import db
 
 
