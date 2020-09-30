@@ -82,3 +82,9 @@ async def create_volunteer(phone: str, password: str) -> db.Volunteer:
         password=get_password_hash(password)).returning(db.volunteer.c.uid)
     uid = await database.execute(query)
     return db.Volunteer(phone=phone, uid=uid)
+
+
+async def is_blacklisted(token):
+    query = db.miserables.select().where(db.miserables.c.token==token)
+    found = await database.fetch_one(query)
+    return bool(found)
