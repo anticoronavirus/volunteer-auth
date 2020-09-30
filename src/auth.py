@@ -1,18 +1,20 @@
-from uuid import uuid4
 from datetime import datetime, timedelta
+from uuid import uuid4
 
 import jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
-from jencoder import UUIDEncoder
 
 import conf
 import db
 from db import database
+from jencoder import UUIDEncoder
 
-
-ACCESS_TOKEN_EXPIRE_MINUTES = conf.TOKEN_EXP_MINUTES
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def millitimestamp(dt):
+    return int(dt.timestamp() * 10**3)
 
 
 class Token(BaseModel):
@@ -39,18 +41,17 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 
-def create_access_token(*, data: dict, expires_delta: timedelta = None):
+def create_access_token(*,
+                        data: dict,
+                        expires_delta: timedelta = timedelta(minutes=15)):
     to_encode = data.copy()
-    if expires_delta:
-        expires = datetime.utcnow() + expires_delta
-    else:
-        expires = datetime.utcnow() + timedelta(minutes=15)
-    to_encode.update({"exp": expires})
+    expires = datetime.now() + expires_delta
+    to_encode.update({"exp": expires.timestamp()})
     encoded_jwt = jwt.encode(to_encode,
                              conf.SECRET_KEY,
                              algorithm=conf.ALGORITHM,
                              json_encoder=UUIDEncoder)
-    return encoded_jwt, expires
+    return encoded_jwt, millitimestamp(expires)
 
 
 async def get_volunteer(phone: str):
