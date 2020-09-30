@@ -36,17 +36,13 @@ def create_token(user_id: Union[UUID, str]) -> dict:
     )
     return {"access_token": access_token,
             "token_type": "bearer",
-            "jwt_token_expiry": expires.timestamp()}
+            "jwt_token_expiry": expires}
 
 
 def create_refresh_token(user_id: UUID) -> dict:
-    access_token_expires = timedelta(minutes=conf.REFRESH_TOKEN_EXP_MINUTES)
-    access_token, expires = create_access_token(
-        data={
-            "sub": user_id,
-            "refr": True
-        },
-        expires_delta=access_token_expires
+    access_token, _ = create_access_token(
+        data={"sub": user_id, "refr": True},
+        expires_delta=timedelta(minutes=conf.REFRESH_TOKEN_EXP_MINUTES)
     )
     return access_token
 
@@ -125,37 +121,57 @@ class GetJWT(graphene.Mutation):
         info.context["cook"].set_cookie("refresh_token",
                                         refresh_token.decode("utf-8"),
                                         httponly=True)
-        print(info.context["cook"].cookies)
-
         return cls(authenticated=True,
                    access_token=token["access_token"].decode("utf-8"),
                    token_type=token["token_type"],
-                   expires=token["jwt_token_expiry"])
+                   expires_at=token["jwt_token_expiry"])
 
 
-class RefreshJWT(graphene.Mutation):
+class GetJWT(JWTMutation):
+    class Arguments:
+        phone = graphene.String()
+        password = graphene.String()
+
+    @staticmethod
+    async def mutate(root, info, phone, password):
+        phone164 = Phone(phone=phone).phone
+        user = await get_volunteer(phone164)
+        if not user:
+            raise GraphQLError("Нет такого пользователя")
+        if not verify_password(password, user.password):
+            raise GraphQLError("Неверный пароль")
+
+        return GetJWT.create_tokens(info, user.uid)
+
+
+class RefreshJWT(JWTMutation):
     class Arguments:
         pass
 
-    authenticated = graphene.Boolean()
-    access_token = graphene.String()
-    token_type = graphene.String()
-    expires = graphene.Float()
-
     @staticmethod
     async def mutate(root, info):
-        request = info.context['request']
         try:
-            decoded = jwt.decode(request.cookies['refresh_token'],
-                                 conf.SECRET_KEY,
-                                 algorithm=conf.ALGORITHM)
-        except KeyError:            
+            refresh_token = info.context["request"].cookies["refresh_token"]
+        except KeyError:
             raise GraphQLError("Refresh token not found in cookies. "
                                "Relogin and try again.")
+
+        try:
+            decoded = jwt.decode(refresh_token,
+                                 conf.SECRET_KEY,
+                                 algorithm=conf.ALGORITHM)
         except:
-            raise GraphQLError("Token verification failed.")
+            raise TokenVerificationFailed
         else:
-            return GetJWT.create_tokens(info, decoded["sub"])
+            if datetime.fromtimestamp(decoded["exp"]) <= datetime.now():
+                raise GraphQLError("Token expired")
+            elif await is_blacklisted(refresh_token):
+                raise TokenVerificationFailed
+            else:
+                query = db.miserables.insert().values(token=refresh_token)
+                await database.execute(query)
+                return GetJWT.create_tokens(info, decoded["sub"])
+
         #     raise GraphQLError("Token verification failed.")
         # else:
         #     if not decoded["refr"]:
