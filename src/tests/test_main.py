@@ -3,6 +3,12 @@ from unittest.mock import AsyncMock, patch
 import db
 
 
+def find_blacklisted(dbe, token):
+    return dbe.execute(
+        db.miserables.select().where(db.miserables.c.token==token)
+    ).fetchone()
+
+
 @patch("sms.aero.send_bool", AsyncMock(return_value=True))
 def test_signup(client, volunteer):
     query = f"""
@@ -46,8 +52,7 @@ def test_token_lifecycle(client, volunteer, dbe):
     assert "refresh_token" in response.cookies
     assert response.cookies["refresh_token"] != refresh_token
     blacklisted = dbe.execute(db.miserables.select()).fetchone()
-    assert blacklisted
-    assert blacklisted[0] == refresh_token
+    assert find_blacklisted(dbe, refresh_token)
     refresh_token = response.cookies["refresh_token"]
 
     # 3) logoff
@@ -57,3 +62,4 @@ def test_token_lifecycle(client, volunteer, dbe):
                            cookies={"refresh_token": refresh_token})
     assert response.status_code == 200
     assert "refresh_token" not in response.cookies
+    assert find_blacklisted(dbe, refresh_token)
