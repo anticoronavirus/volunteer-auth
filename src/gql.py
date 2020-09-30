@@ -168,9 +168,24 @@ class Logoff(graphene.Mutation, graphene.ObjectType):
 
     async def mutate(root, info):
         info.context["cook"].delete_cookie("refresh_token")
-        return Logoff(status="ok")
-        # raise GraphQLError("Refresh token not found in cookies. "
-        #                    "Relogin and try again.")
+        try:
+            refresh_token = info.context["request"].cookies["refresh_token"]
+        except KeyError:
+            # token's missing from cookies
+            return Logoff(status="ok")
+
+        try:
+            decoded = jwt.decode(refresh_token,
+                                 conf.SECRET_KEY,
+                                 algorithm=conf.ALGORITHM)
+        except:
+            raise TokenVerificationFailed
+        else:
+            # token decoded successfully
+            query = db.miserables.insert().values(token=refresh_token)
+            await database.execute(query)
+        finally:
+            return Logoff(status="ok")
 
 
 class Mutations(graphene.ObjectType):
