@@ -8,7 +8,6 @@ from sqlalchemy.dialects.postgresql import UUID
 import conf
 
 
-# SQLAlchemy specific code, as with any other app
 database = databases.Database(conf.DATABASE_URL)
 
 metadata = sqlalchemy.MetaData()
