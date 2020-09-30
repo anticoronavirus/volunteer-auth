@@ -58,6 +58,10 @@ class Query(graphene.ObjectType):
         return "Hello " + name
 
 
+def make_password():
+    return str(random.randint(1000, 9999))
+
+
 class VolunteerSignUp(graphene.Mutation):
     class Arguments:
         phone = graphene.String()
@@ -71,7 +75,7 @@ class VolunteerSignUp(graphene.Mutation):
         volunteer = await get_volunteer(ph_formatted)
         if volunteer and volunteer.password:
             return VolunteerSignUp(status="exists")
-        tpassword = str(random.randint(1000, 9999))
+        tpassword = make_password()
         logger.warn(tpassword)
         sent = await aero.send_bool(
             phone,
