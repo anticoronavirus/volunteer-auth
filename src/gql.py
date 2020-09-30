@@ -4,19 +4,23 @@ from datetime import timedelta
 from typing import Union
 from uuid import UUID
 
+import graphene
+from datetime import datetime
+import jwt
+from graphql import GraphQLError
+
 import conf
 import db
-import graphene
-import jwt
-from auth import (Token, authenticate_user,
-                  create_access_token, create_volunteer, get_password_hash,
-                  get_volunteer, verify_password)
+from auth import (Token, authenticate_user, create_access_token,
+                  create_volunteer, get_password_hash, get_volunteer,
+                  verify_password, is_blacklisted)
 from db import database
-from graphql import GraphQLError
 from schema import Phone
 from sms import aero
 
+
 logger = logging.getLogger(__name__)
+TokenVerificationFailed = GraphQLError("Token verification failed.")
 
 
 def create_token(user_id: Union[UUID, str]) -> dict:
@@ -91,26 +95,14 @@ class VolunteerSignUp(graphene.Mutation):
             return VolunteerSignUp(status="ok")
 
 
-class GetJWT(graphene.Mutation):
-    class Arguments:
-        phone = graphene.String()
-        password = graphene.String()
-
+class JWTMutation(graphene.Mutation):
     authenticated = graphene.Boolean()
     access_token = graphene.String()
     token_type = graphene.String()
-    expires = graphene.Float()
+    expires_at = graphene.Float()
 
-    @staticmethod
-    async def mutate(root, info, phone, password):
-        phone164 = Phone(phone=phone).phone
-        user = await get_volunteer(phone164)
-        if not user:
-            raise GraphQLError("Нет такого пользователя")
-        if not verify_password(password, user.password):
-            raise GraphQLError("Неверный пароль")
-
-        return GetJWT.create_tokens(info, user.uid)
+    def mutate(root, info, phone, password):
+        pass
 
     @classmethod
     def create_tokens(cls, info, user_id: Union[str, UUID]):
