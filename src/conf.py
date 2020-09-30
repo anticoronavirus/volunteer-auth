@@ -9,7 +9,7 @@ AERO_URL = config("AERO_URL", default="https://gate.smsaero.ru/v2")
 AERO_LOGIN = config("AERO_LOGIN", default="")
 AERO_TOKEN = config("AERO_TOKEN", default="")
 TOKEN_EXP_MINUTES = config("TOKEN_EXP_MINUTES", cast=int, default=15)
-REFRESH_TOKEN_EXP_MINUTES = config("REFRESH_TOKEN_EXP_MINUTES", cast=int, default=3) #60 * 127))
+REFRESH_TOKEN_EXP_MINUTES = config("REFRESH_TOKEN_EXP_MINUTES", cast=int, default=60 * 127)
 DATABASE_URL = config("DATABASE_URL", cast=databases.DatabaseURL)
 if config("TESTING", cast=bool, default=False):
     DATABASE_URL = DATABASE_URL.replace(database="test_" + DATABASE_URL.database)
