@@ -8,7 +8,6 @@ from sqlalchemy.dialects.postgresql import UUID
 import conf
 
 
-# SQLAlchemy specific code, as with any other app
 database = databases.Database(conf.DATABASE_URL)
 
 metadata = sqlalchemy.MetaData()
@@ -26,10 +25,15 @@ volunteer = sqlalchemy.Table(
     sqlalchemy.Column("password", sqlalchemy.String),
 )
 
-
-engine = sqlalchemy.create_engine(
-    conf.DATABASE_URL, connect_args={"check_same_thread": False}
+miserables = sqlalchemy.Table(
+    "miserables",
+    metadata,
+    sqlalchemy.Column("token", sqlalchemy.String, primary_key=True),
+    schema=conf.TOKEN_SCHEMA_NAME
+    # sqlalchemy.Column("expires", sqlalchemy.TIMESTAMP(timezone=True)),
 )
+
+# engine = sqlalchemy.create_engine(conf.DATABASE_URL)
 # metadata.create_all(engine)
 
 class Volunteer(BaseModel):

@@ -20,10 +20,3 @@ class Phone(BaseModel):
             if len(phone) != 12:
                 raise ValueError("Not a mobile phone")
             return phone
-
-
-class Registration(BaseModel):
-    status: Literal["exists", "failed", "ok"]
-    token: Token = None
-    code_: str = None
-

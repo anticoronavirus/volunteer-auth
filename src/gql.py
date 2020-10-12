@@ -4,19 +4,23 @@ from datetime import timedelta
 from typing import Union
 from uuid import UUID
 
+import graphene
+from datetime import datetime
+import jwt
+from graphql import GraphQLError
+
 import conf
 import db
-import graphene
-import jwt
-from auth import (Token, authenticate_user,
-                  create_access_token, create_volunteer, get_password_hash,
-                  get_volunteer, verify_password)
+from auth import (Token, authenticate_user, create_access_token,
+                  create_volunteer, get_password_hash, get_volunteer,
+                  verify_password, is_blacklisted)
 from db import database
-from graphql import GraphQLError
 from schema import Phone
 from sms import aero
 
+
 logger = logging.getLogger(__name__)
+TokenVerificationFailed = GraphQLError("Token verification failed.")
 
 
 def create_token(user_id: Union[UUID, str]) -> dict:
@@ -36,17 +40,13 @@ def create_token(user_id: Union[UUID, str]) -> dict:
     )
     return {"access_token": access_token,
             "token_type": "bearer",
-            "jwt_token_expiry": expires.timestamp()}
+            "jwt_token_expiry": expires}
 
 
 def create_refresh_token(user_id: UUID) -> dict:
-    access_token_expires = timedelta(minutes=conf.REFRESH_TOKEN_EXP_MINUTES)
-    access_token, expires = create_access_token(
-        data={
-            "sub": user_id,
-            "refr": True
-        },
-        expires_delta=access_token_expires
+    access_token, _ = create_access_token(
+        data={"sub": user_id, "refr": True},
+        expires_delta=timedelta(minutes=conf.REFRESH_TOKEN_EXP_MINUTES)
     )
     return access_token
 
@@ -56,6 +56,10 @@ class Query(graphene.ObjectType):
 
     def resolve_hello(self, info, name):
         return "Hello " + name
+
+
+def make_password():
+    return str(random.randint(1000, 9999))
 
 
 class VolunteerSignUp(graphene.Mutation):
@@ -71,7 +75,7 @@ class VolunteerSignUp(graphene.Mutation):
         volunteer = await get_volunteer(ph_formatted)
         if volunteer and volunteer.password:
             return VolunteerSignUp(status="exists")
-        tpassword = str(random.randint(1000, 9999))
+        tpassword = make_password()
         logger.warn(tpassword)
         sent = await aero.send_bool(
             phone,
@@ -91,15 +95,34 @@ class VolunteerSignUp(graphene.Mutation):
             return VolunteerSignUp(status="ok")
 
 
-class GetJWT(graphene.Mutation):
-    class Arguments:
-        phone = graphene.String()
-        password = graphene.String()
-
+class JWTMutation(graphene.Mutation):
     authenticated = graphene.Boolean()
     access_token = graphene.String()
     token_type = graphene.String()
-    expires = graphene.Float()
+    expires_at = graphene.Float()
+
+    def mutate(root, info, phone, password):
+        pass
+
+    @classmethod
+    def create_tokens(cls, info, user_id: Union[str, UUID]):
+        token = create_token(user_id)
+        refresh_token = create_refresh_token(user_id)
+
+        # set refresh token as cookie
+        info.context["cook"].set_cookie("refresh_token",
+                                        refresh_token.decode("utf-8"),
+                                        httponly=True)
+        return cls(authenticated=True,
+                   access_token=token["access_token"].decode("utf-8"),
+                   token_type=token["token_type"],
+                   expires_at=token["jwt_token_expiry"])
+
+
+class GetJWT(JWTMutation):
+    class Arguments:
+        phone = graphene.String()
+        password = graphene.String()
 
     @staticmethod
     async def mutate(root, info, phone, password):
@@ -112,43 +135,35 @@ class GetJWT(graphene.Mutation):
 
         return GetJWT.create_tokens(info, user.uid)
 
-    @classmethod
-    def create_tokens(cls, info, user_id: Union[str, UUID]):
-        token = create_token(user_id)
-        refresh_token = create_refresh_token(user_id)
 
-        # set refresh token as cookie
-        info.context["cookies"] = {"refresh_token": refresh_token.decode("utf-8")}
-
-        return cls(authenticated=True,
-                   access_token=token["access_token"].decode("utf-8"),
-                   token_type=token["token_type"],
-                   expires=token["jwt_token_expiry"])
-
-
-class RefreshJWT(graphene.Mutation):
+class RefreshJWT(JWTMutation):
     class Arguments:
         pass
 
-    authenticated = graphene.Boolean()
-    access_token = graphene.String()
-    token_type = graphene.String()
-    expires = graphene.Float()
-
     @staticmethod
     async def mutate(root, info):
-        request = info.context['request']
         try:
-            decoded = jwt.decode(request.cookies['refresh_token'],
-                                 conf.SECRET_KEY,
-                                 algorithm=conf.ALGORITHM)
-        except KeyError:            
+            refresh_token = info.context["request"].cookies["refresh_token"]
+        except KeyError:
             raise GraphQLError("Refresh token not found in cookies. "
                                "Relogin and try again.")
+
+        try:
+            decoded = jwt.decode(refresh_token,
+                                 conf.SECRET_KEY,
+                                 algorithm=conf.ALGORITHM)
         except:
-            raise GraphQLError("Token verification failed.")
+            raise TokenVerificationFailed
         else:
-            return GetJWT.create_tokens(info, decoded["sub"])
+            if datetime.fromtimestamp(decoded["exp"]) <= datetime.now():
+                raise GraphQLError("Token expired")
+            elif await is_blacklisted(refresh_token):
+                raise TokenVerificationFailed
+            else:
+                query = db.miserables.insert().values(token=refresh_token)
+                await database.execute(query)
+                return GetJWT.create_tokens(info, decoded["sub"])
+
         #     raise GraphQLError("Token verification failed.")
         # else:
         #     if not decoded["refr"]:
@@ -160,7 +175,33 @@ class RefreshJWT(graphene.Mutation):
         #                   expires=token["jwt_token_expiry"])
 
 
+class Logoff(graphene.Mutation, graphene.ObjectType):
+    status = graphene.String()
+
+    async def mutate(root, info):
+        info.context["cook"].delete_cookie("refresh_token")
+        try:
+            refresh_token = info.context["request"].cookies["refresh_token"]
+        except KeyError:
+            # token's missing from cookies
+            return Logoff(status="ok")
+
+        try:
+            decoded = jwt.decode(refresh_token,
+                                 conf.SECRET_KEY,
+                                 algorithm=conf.ALGORITHM)
+        except:
+            raise TokenVerificationFailed
+        else:
+            # token decoded successfully
+            query = db.miserables.insert().values(token=refresh_token)
+            await database.execute(query)
+        finally:
+            return Logoff(status="ok")
+
+
 class Mutations(graphene.ObjectType):
     signUp = VolunteerSignUp.Field()
     getToken = GetJWT.Field()
     refreshToken = RefreshJWT.Field()
+    logoff = Logoff.Field()

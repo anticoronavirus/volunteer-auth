@@ -4,7 +4,7 @@ WORKDIR /app
 
 ENV PYTHONUNBUFERRED=1
 
-COPY requirements.txt /app/requirements.txt
+COPY requirements/prod.txt /app/requirements.txt
 
 RUN pip install --trusted-host pypi.org \
                 --trusted-host pypi.python.org \
