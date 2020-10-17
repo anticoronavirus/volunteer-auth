@@ -10,6 +10,7 @@ import db
 from db import database
 from jencoder import UUIDEncoder
 
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
@@ -71,7 +72,7 @@ async def authenticate_user(phone: str, password: str):
     return user
 
 
-async def create_volunteer(phone: str, password: str) -> db.Volunteer:
+async def create_volunteer(phone: str, password_hash: str) -> db.Volunteer:
     query = db.volunteer.insert().values(
         uid=uuid4(),
         fname="",
@@ -80,7 +81,10 @@ async def create_volunteer(phone: str, password: str) -> db.Volunteer:
         email="",
         phone=phone,
         role="volunteer",
-        password=get_password_hash(password)).returning(db.volunteer.c.uid)
+        password=password_hash,
+        password_expires_at=datetime.now()+timedelta(seconds=conf.PASSWORD_EXP_SEC),
+    ).returning(db.volunteer.c.uid)
+
     uid = await database.execute(query)
     return db.Volunteer(phone=phone, uid=uid)
 
