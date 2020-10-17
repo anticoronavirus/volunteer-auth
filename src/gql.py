@@ -1,6 +1,6 @@
 import logging
 import random
-from datetime import timedelta
+from datetime import timedelta, datetime
 from typing import Union
 from uuid import UUID
 
@@ -63,29 +63,37 @@ class VolunteerRequestPassword(graphene.Mutation):
 
     @staticmethod
     async def mutate(root, info, phone):
-        # raises error if not valid.
-        ph_formatted = Phone(phone=phone).phone
-        volunteer = await get_volunteer(ph_formatted)
-        if volunteer and volunteer.password:
-            return VolunteerRequestPassword(status="exists")
-        tpassword = make_password()
-        logger.warn(tpassword)
-        sent = await aero.send_bool(
+        password = make_password()
+        password_hash = get_password_hash(password)
+        await VolunteerRequestPassword.upsert_volunteer_with_password(
+            # raises error if phone string is not valid.
+            Phone(phone=phone).phone,
+            password_hash,
+        )
+        message = await aero.send_bool(
             phone,
             "NEWS",
-            f"{tpassword} is your memedic volunteer code <3")
-        if not sent:
+            f"{password} is your memedic volunteer code <3",
+        )
+        if not message:
             return VolunteerRequestPassword(status="failed")
         else:
-            if volunteer:
-                volunteer.password = get_password_hash(tpassword)
-                query = (db.volunteer.update().
-                         where(db.volunteer.c.uid==volunteer.uid).
-                         values(password=volunteer.password))
-                await database.execute(query)
-            else:
-                volunteer = await create_volunteer(ph_formatted, tpassword)
             return VolunteerRequestPassword(status="ok")
+
+    @staticmethod
+    async def upsert_volunteer_with_password(phone: str, password_hash: str):
+        query = (
+            db.volunteer.update().
+            where(db.volunteer.c.phone==phone).
+            values(
+                password=password_hash,
+                password_expires_at=datetime.now()+timedelta(seconds=conf.PASSWORD_EXP_SEC),
+            ).
+            returning(db.volunteer.c.uid)
+        )
+        result = await database.execute(query)
+        if not result:
+            await create_volunteer(phone, password_hash)
 
 
 class JWTMutation(graphene.Mutation):
