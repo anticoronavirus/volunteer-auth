@@ -12,5 +12,5 @@ class Volunteer(BaseModel):
     phone: str
     email: str = ""
     role: str = "volunteer"
-    password: str = ""
+    password: str = None
     password_expires_at: datetime = None
