@@ -55,7 +55,7 @@ def make_password():
     return str(random.randint(1000, 9999))
 
 
-class VolunteerSignUp(graphene.Mutation):
+class VolunteerRequestPassword(graphene.Mutation):
     class Arguments:
         phone = graphene.String()
 
@@ -67,7 +67,7 @@ class VolunteerSignUp(graphene.Mutation):
         ph_formatted = Phone(phone=phone).phone
         volunteer = await get_volunteer(ph_formatted)
         if volunteer and volunteer.password:
-            return VolunteerSignUp(status="exists")
+            return VolunteerRequestPassword(status="exists")
         tpassword = make_password()
         logger.warn(tpassword)
         sent = await aero.send_bool(
@@ -75,7 +75,7 @@ class VolunteerSignUp(graphene.Mutation):
             "NEWS",
             f"{tpassword} is your memedic volunteer code <3")
         if not sent:
-            return VolunteerSignUp(status="failed")
+            return VolunteerRequestPassword(status="failed")
         else:
             if volunteer:
                 volunteer.password = get_password_hash(tpassword)
@@ -85,7 +85,7 @@ class VolunteerSignUp(graphene.Mutation):
                 await database.execute(query)
             else:
                 volunteer = await create_volunteer(ph_formatted, tpassword)
-            return VolunteerSignUp(status="ok")
+            return VolunteerRequestPassword(status="ok")
 
 
 class JWTMutation(graphene.Mutation):
@@ -194,7 +194,7 @@ class Logoff(graphene.Mutation, graphene.ObjectType):
 
 
 class Mutations(graphene.ObjectType):
-    signUp = VolunteerSignUp.Field()
+    requestPassword = VolunteerRequestPassword.Field()
     getToken = GetJWT.Field()
     refreshToken = RefreshJWT.Field()
     logoff = Logoff.Field()
