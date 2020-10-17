@@ -17,3 +17,4 @@ TOKEN_SCHEMA_NAME = config("TOKEN_SCHEMA_NAME", default="les")
 JWT_SETTINGS = config("JWT_SECRET", cast=json.loads, default='{"type": "HS256", "key": "test"}')
 SECRET_KEY = JWT_SETTINGS["key"]
 ALGORITHM = JWT_SETTINGS["type"]
+PASSWORD_EXP_SEC = 180
