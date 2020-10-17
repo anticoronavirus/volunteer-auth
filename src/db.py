@@ -1,11 +1,7 @@
-import uuid
-
+import conf
 import databases
 import sqlalchemy
-from pydantic import BaseModel
 from sqlalchemy.dialects.postgresql import UUID
-
-import conf
 
 
 database = databases.Database(conf.DATABASE_URL)
@@ -23,6 +19,7 @@ volunteer = sqlalchemy.Table(
     sqlalchemy.Column("email", sqlalchemy.String),
     sqlalchemy.Column("role", sqlalchemy.String),
     sqlalchemy.Column("password", sqlalchemy.String),
+    sqlalchemy.Column("password_expires_at", sqlalchemy.TIMESTAMP(timezone=True)),
 )
 
 miserables = sqlalchemy.Table(
@@ -33,15 +30,5 @@ miserables = sqlalchemy.Table(
     # sqlalchemy.Column("expires", sqlalchemy.TIMESTAMP(timezone=True)),
 )
 
-# engine = sqlalchemy.create_engine(conf.DATABASE_URL)
+# engine = sqlalchemy.create_engine(str(conf.DATABASE_URL))
 # metadata.create_all(engine)
-
-class Volunteer(BaseModel):
-    uid: uuid.UUID
-    fname: str = ""
-    mname: str = ""
-    lname: str = ""
-    phone: str
-    email: str = ""
-    role: str = "volunteer"
-    password: str = ""

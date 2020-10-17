@@ -5,6 +5,7 @@ from starlette.testclient import TestClient
 from sqlalchemy import create_engine, schema
 from sqlalchemy_utils import database_exists, create_database, drop_database
 from starlette.config import environ
+from models import Volunteer
 
 
 environ["TESTING"] = "True"
@@ -12,7 +13,7 @@ environ["TESTING"] = "True"
 
 # these imports absolutely have to follow calls to environ.
 from main import app
-from db import metadata, Volunteer
+from db import metadata
 import conf
 
 

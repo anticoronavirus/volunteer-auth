@@ -6,6 +6,7 @@ import db
 import jwt
 from dates import aware_now
 from db import database
+from models import Volunteer
 from jencoder import UUIDEncoder
 from passlib.context import CryptContext
 from pydantic import BaseModel
@@ -60,10 +61,10 @@ async def get_volunteer(phone: str):
     # username is guaranteed to be unique
     volnt = await database.fetch_one(query)
     if volnt:
-        return db.Volunteer(**volnt)
+        return Volunteer(**volnt)
 
 
-async def flush_password(user: db.Volunteer):
+async def flush_password(user: Volunteer):
     query = (
         db.volunteer.update().
         where(db.volunteer.c.uid==user.uid).
@@ -84,7 +85,7 @@ async def authenticate_user(phone: str, password: str):
     return user
 
 
-async def create_volunteer(phone: str, password_hash: str) -> db.Volunteer:
+async def create_volunteer(phone: str, password_hash: str) -> Volunteer:
     query = db.volunteer.insert().values(
         uid=uuid4(),
         fname="",
@@ -98,7 +99,7 @@ async def create_volunteer(phone: str, password_hash: str) -> db.Volunteer:
     ).returning(db.volunteer.c.uid)
 
     uid = await database.execute(query)
-    return db.Volunteer(phone=phone, uid=uid)
+    return Volunteer(phone=phone, uid=uid)
 
 
 async def is_blacklisted(token):
