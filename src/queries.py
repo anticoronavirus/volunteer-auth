@@ -21,7 +21,7 @@ async def flush_password(user: Volunteer):
         db.volunteer.update().
         where(db.volunteer.c.uid==user.uid).
         values(
-            password='',
+            password=None,
             password_expires_at=None,
         )
     )
