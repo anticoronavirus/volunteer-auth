@@ -17,8 +17,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 app.add_route("/",
               LessCrappyGQLApp(
-                  schema=graphene.Schema(query=gql.Query,
-                                         mutation=gql.Mutations),
+                  schema=graphene.Schema(mutation=gql.Mutations),
                   executor_class=AsyncioExecutor))
 
 
