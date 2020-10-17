@@ -10,10 +10,10 @@ def find_blacklisted(dbe, token):
 
 
 @patch("sms.aero.send_bool", AsyncMock(return_value=True))
-def test_signup(client, volunteer):
+def test_request_password(client, volunteer):
     query = f"""
     mutation {{
-      signUp(phone: "{volunteer.phone}") {{
+      requestPassword(phone: "{volunteer.phone}") {{
         status}}}}
     """
     with patch("gql.make_password", lambda: volunteer.password):
