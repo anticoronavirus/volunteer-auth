@@ -1,14 +1,14 @@
 from datetime import datetime, timedelta
 from uuid import uuid4
 
-import jwt
-from passlib.context import CryptContext
-from pydantic import BaseModel
-
 import conf
 import db
+import jwt
+from dates import aware_now
 from db import database
 from jencoder import UUIDEncoder
+from passlib.context import CryptContext
+from pydantic import BaseModel
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -94,7 +94,7 @@ async def create_volunteer(phone: str, password_hash: str) -> db.Volunteer:
         phone=phone,
         role="volunteer",
         password=password_hash,
-        password_expires_at=datetime.now()+timedelta(seconds=conf.PASSWORD_EXP_SEC),
+        password_expires_at=aware_now() + timedelta(seconds=conf.PASSWORD_EXP_SEC),
     ).returning(db.volunteer.c.uid)
 
     uid = await database.execute(query)
