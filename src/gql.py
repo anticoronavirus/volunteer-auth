@@ -1,20 +1,19 @@
 import logging
 import random
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from typing import Union
 from uuid import UUID
 
-import graphene
-from datetime import datetime
-import jwt
-from graphql import GraphQLError
-
 import conf
 import db
+import graphene
+import jwt
 from auth import (Token, authenticate_user, create_access_token,
-                  create_volunteer, get_password_hash, get_volunteer,
-                  verify_password, is_blacklisted, flush_password)
+                  create_volunteer, flush_password, get_password_hash,
+                  get_volunteer, is_blacklisted, verify_password)
+from dates import aware_now
 from db import database
+from graphql import GraphQLError
 from schema import Phone
 from sms import aero
 
@@ -87,7 +86,7 @@ class RequestPassword(graphene.Mutation):
             where(db.volunteer.c.phone==phone).
             values(
                 password=password_hash,
-                password_expires_at=datetime.now()+timedelta(seconds=conf.PASSWORD_EXP_SEC),
+                password_expires_at=aware_now() + timedelta(seconds=conf.PASSWORD_EXP_SEC),
             ).
             returning(db.volunteer.c.uid)
         )
@@ -133,7 +132,7 @@ class GetJWT(JWTMutation):
             raise GraphQLError("Нет такого пользователя")
         if not verify_password(password, user.password):
             raise GraphQLError("Неверный пароль")
-        if user.password_expires_at <= datetime.now():
+        if user.password_expires_at <= aware_now():
             raise GraphQLError("Пароль просрочен. Запросите новый.")
 
         await flush_password(user)
