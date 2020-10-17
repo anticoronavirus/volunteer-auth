@@ -13,7 +13,7 @@ import conf
 import db
 from auth import (Token, authenticate_user, create_access_token,
                   create_volunteer, get_password_hash, get_volunteer,
-                  verify_password, is_blacklisted)
+                  verify_password, is_blacklisted, flush_password)
 from db import database
 from schema import Phone
 from sms import aero
@@ -133,7 +133,10 @@ class GetJWT(JWTMutation):
             raise GraphQLError("Нет такого пользователя")
         if not verify_password(password, user.password):
             raise GraphQLError("Неверный пароль")
+        if user.password_expires_at <= datetime.now():
+            raise GraphQLError("Пароль просрочен. Запросите новый.")
 
+        await flush_password(user)
         return GetJWT.create_tokens(info, user.uid)
 
 

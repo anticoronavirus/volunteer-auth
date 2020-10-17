@@ -63,6 +63,18 @@ async def get_volunteer(phone: str):
         return db.Volunteer(**volnt)
 
 
+async def flush_password(user: db.Volunteer):
+    query = (
+        db.volunteer.update().
+        where(db.volunteer.c.uid==user.uid).
+        values(
+            password='',
+            password_expires_at=None,
+        )
+    )
+    result = await database.execute(query)
+
+
 async def authenticate_user(phone: str, password: str):
     user = await get_volunteer(phone)
     if not user:
