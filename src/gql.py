@@ -130,10 +130,13 @@ class GetJWT(JWTMutation):
         user = await get_volunteer(phone164)
         if not user:
             raise GraphQLError("Нет такого пользователя")
-        if not verify_password(password, user.password):
-            raise GraphQLError("Неверный пароль")
-        if user.password_expires_at <= aware_now():
+        elif (
+                user.password_expires_at is None
+                or user.password_expires_at <= aware_now()
+        ):
             raise GraphQLError("Пароль просрочен. Запросите новый.")
+        elif not verify_password(password, user.password):
+            raise GraphQLError("Неверный пароль")
 
         await flush_password(user)
         return GetJWT.create_tokens(info, user.uid)
