@@ -18,8 +18,12 @@ volunteer = sqlalchemy.Table(
     sqlalchemy.Column("phone", sqlalchemy.String),
     sqlalchemy.Column("email", sqlalchemy.String),
     sqlalchemy.Column("role", sqlalchemy.String),
-    sqlalchemy.Column("password", sqlalchemy.String),
-    sqlalchemy.Column("password_expires_at", sqlalchemy.TIMESTAMP(timezone=True)),
+    sqlalchemy.Column("password", sqlalchemy.String, nullable=True),
+    sqlalchemy.Column(
+        "password_expires_at",
+        sqlalchemy.TIMESTAMP(timezone=True),
+        nullable=True
+    ),
 )
 
 miserables = sqlalchemy.Table(
