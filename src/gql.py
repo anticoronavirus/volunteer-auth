@@ -51,13 +51,6 @@ def create_refresh_token(user_id: UUID) -> dict:
     return access_token
 
 
-class Query(graphene.ObjectType):
-    hello = graphene.String(name=graphene.String(default_value="stranger"))
-
-    def resolve_hello(self, info, name):
-        return "Hello " + name
-
-
 def make_password():
     return str(random.randint(1000, 9999))
 
