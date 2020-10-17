@@ -5,8 +5,8 @@ from fastapi import FastAPI
 from graphql.execution.executors.asyncio import AsyncioExecutor
 
 import gql
-from auth import (Token, authenticate_user, create_access_token,
-                  create_volunteer, get_volunteer)
+from auth import Token, create_access_token, authenticate_user
+from queries import create_volunteer, get_volunteer
 from db import database
 from gqlapp import LessCrappyGQLApp
 

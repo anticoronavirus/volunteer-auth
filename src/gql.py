@@ -9,8 +9,8 @@ import db
 import graphene
 import jwt
 from auth import (Token, authenticate_user, create_access_token,
-                  create_volunteer, flush_password, get_password_hash,
-                  get_volunteer, is_blacklisted, verify_password)
+                  get_password_hash, verify_password)
+from queries import create_volunteer, flush_password, get_volunteer, is_blacklisted
 from dates import aware_now
 from db import database
 from graphql import GraphQLError
