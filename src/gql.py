@@ -55,7 +55,7 @@ def make_password():
     return str(random.randint(1000, 9999))
 
 
-class VolunteerRequestPassword(graphene.Mutation):
+class RequestPassword(graphene.Mutation):
     class Arguments:
         phone = graphene.String()
 
@@ -65,7 +65,7 @@ class VolunteerRequestPassword(graphene.Mutation):
     async def mutate(root, info, phone):
         password = make_password()
         password_hash = get_password_hash(password)
-        await VolunteerRequestPassword.upsert_volunteer_with_password(
+        await RequestPassword.upsert_volunteer_with_password(
             # raises error if phone string is not valid.
             Phone(phone=phone).phone,
             password_hash,
@@ -76,9 +76,9 @@ class VolunteerRequestPassword(graphene.Mutation):
             f"{password} is your memedic volunteer code <3",
         )
         if not message:
-            return VolunteerRequestPassword(status="failed")
+            return RequestPassword(status="failed")
         else:
-            return VolunteerRequestPassword(status="ok")
+            return RequestPassword(status="ok")
 
     @staticmethod
     async def upsert_volunteer_with_password(phone: str, password_hash: str):
@@ -205,7 +205,7 @@ class Logoff(graphene.Mutation, graphene.ObjectType):
 
 
 class Mutations(graphene.ObjectType):
-    requestPassword = VolunteerRequestPassword.Field()
+    requestPassword = RequestPassword.Field()
     getToken = GetJWT.Field()
     refreshToken = RefreshJWT.Field()
     logoff = Logoff.Field()
