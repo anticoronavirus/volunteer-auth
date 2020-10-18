@@ -62,6 +62,7 @@ async def get_active_password(phone):
 
 async def add_password(volunteer: Volunteer, password_hash: str):
     query = db.password.insert().values(
+        uid=uuid4(),
         volunteer_id=volunteer.uid,
         password=password_hash,
         expires_at=aware_now() + timedelta(seconds=conf.PASSWORD_EXP_SEC),

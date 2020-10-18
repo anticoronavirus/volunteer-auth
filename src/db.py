@@ -31,6 +31,7 @@ miserables = sa.Table(
 password = sa.Table(
     "password",
     metadata,
+    sa.Column("uid", UUID, primary_key=True),
     sa.Column("volunteer_id", UUID, sa.ForeignKey("volunteer.uid")),
     sa.Column("password", sa.String, nullable=True),
     sa.Column(
