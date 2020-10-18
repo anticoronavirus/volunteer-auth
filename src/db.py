@@ -39,6 +39,5 @@ password = sa.Table(
         sa.TIMESTAMP(timezone=True),
         nullable=True
     ),
-    sa.PrimaryKeyConstraint("volunteer_id", "expires_at", name="password_pk"),
     schema=conf.TOKEN_SCHEMA_NAME,
 )
