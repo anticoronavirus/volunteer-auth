@@ -4,6 +4,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
+
 class Volunteer(BaseModel):
     uid: uuid.UUID
     fname: str = ""
@@ -12,5 +13,9 @@ class Volunteer(BaseModel):
     phone: str
     email: str = ""
     role: str = "volunteer"
-    password: str = None
-    password_expires_at: datetime = None
+
+
+class Password(BaseModel):
+    volunteer_id: uuid.UUID
+    password: str
+    expires_at: datetime

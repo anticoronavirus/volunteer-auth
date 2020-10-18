@@ -10,13 +10,13 @@ import graphene
 import jwt
 from auth import (Token, authenticate_user, create_access_token,
                   get_password_hash, verify_password)
-from queries import create_volunteer, flush_password, get_volunteer, is_blacklisted
 from dates import aware_now
 from db import database
 from graphql import GraphQLError
+from queries import (add_password, create_volunteer, flush_password,
+                     get_active_password, get_volunteer, is_blacklisted)
 from schema import Phone
 from sms import aero
-
 
 logger = logging.getLogger(__name__)
 TokenVerificationFailed = GraphQLError("Token verification failed.")
@@ -81,18 +81,11 @@ class RequestPassword(graphene.Mutation):
 
     @staticmethod
     async def upsert_volunteer_with_password(phone: str, password_hash: str):
-        query = (
-            db.volunteer.update().
-            where(db.volunteer.c.phone==phone).
-            values(
-                password=password_hash,
-                password_expires_at=aware_now() + timedelta(seconds=conf.PASSWORD_EXP_SEC),
-            ).
-            returning(db.volunteer.c.uid)
-        )
-        result = await database.execute(query)
-        if not result:
-            await create_volunteer(phone, password_hash)
+        volunteer = await get_volunteer(phone)
+        if not volunteer:
+            volunteer = await create_volunteer(phone)
+
+        await add_password(volunteer, password_hash)
 
 
 class JWTMutation(graphene.Mutation):
@@ -127,19 +120,20 @@ class GetJWT(JWTMutation):
     @staticmethod
     async def mutate(root, info, phone, password):
         phone164 = Phone(phone=phone).phone
-        user = await get_volunteer(phone164)
-        if not user:
-            raise GraphQLError("Нет такого пользователя")
-        elif (
-                user.password_expires_at is None
-                or user.password_expires_at <= aware_now()
+        user_with_password = await get_active_password(phone164)
+
+        if not user_with_password:
+            raise GraphQLError("Нет такого пользователя.")
+        if (
+                user_with_password["expires_at"] is None
+                or user_with_password["expires_at"] <= aware_now()
         ):
             raise GraphQLError("Пароль просрочен. Запросите новый.")
-        elif not verify_password(password, user.password):
+        elif not verify_password(password, user_with_password['password']):
             raise GraphQLError("Неверный пароль")
 
-        await flush_password(user)
-        return GetJWT.create_tokens(info, user.uid)
+        await flush_password(user_with_password)
+        return GetJWT.create_tokens(info, user_with_password["uid"])
 
 
 class RefreshJWT(JWTMutation):

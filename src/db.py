@@ -1,38 +1,43 @@
 import conf
 import databases
-import sqlalchemy
+import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
 
 
 database = databases.Database(conf.DATABASE_URL)
 
-metadata = sqlalchemy.MetaData()
+metadata = sa.MetaData()
 
-volunteer = sqlalchemy.Table(
+volunteer = sa.Table(
     "volunteer",
     metadata,
-    sqlalchemy.Column("uid", UUID, primary_key=True),
-    sqlalchemy.Column("fname", sqlalchemy.String),
-    sqlalchemy.Column("mname", sqlalchemy.String),
-    sqlalchemy.Column("lname", sqlalchemy.String),
-    sqlalchemy.Column("phone", sqlalchemy.String),
-    sqlalchemy.Column("email", sqlalchemy.String),
-    sqlalchemy.Column("role", sqlalchemy.String),
-    sqlalchemy.Column("password", sqlalchemy.String, nullable=True),
-    sqlalchemy.Column(
-        "password_expires_at",
-        sqlalchemy.TIMESTAMP(timezone=True),
-        nullable=True
-    ),
+    sa.Column("uid", UUID, primary_key=True),
+    sa.Column("fname", sa.String),
+    sa.Column("mname", sa.String),
+    sa.Column("lname", sa.String),
+    sa.Column("phone", sa.String),
+    sa.Column("email", sa.String),
+    sa.Column("role", sa.String),
 )
 
-miserables = sqlalchemy.Table(
+miserables = sa.Table(
     "miserables",
     metadata,
-    sqlalchemy.Column("token", sqlalchemy.String, primary_key=True),
+    sa.Column("token", sa.String, primary_key=True),
     schema=conf.TOKEN_SCHEMA_NAME
-    # sqlalchemy.Column("expires", sqlalchemy.TIMESTAMP(timezone=True)),
+    # sa.Column("expires", sa.TIMESTAMP(timezone=True)),
 )
 
-# engine = sqlalchemy.create_engine(str(conf.DATABASE_URL))
-# metadata.create_all(engine)
+password = sa.Table(
+    "password",
+    metadata,
+    sa.Column("volunteer_id", UUID, sa.ForeignKey("volunteer.uid")),
+    sa.Column("password", sa.String, nullable=True),
+    sa.Column(
+        "expires_at",
+        sa.TIMESTAMP(timezone=True),
+        nullable=True
+    ),
+    sa.PrimaryKeyConstraint("volunteer_id", "expires_at", name="password_pk"),
+    schema=conf.TOKEN_SCHEMA_NAME,
+)

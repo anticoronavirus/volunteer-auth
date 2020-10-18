@@ -1,28 +1,32 @@
 import logging
 
-import graphene
-from fastapi import FastAPI
-from graphql.execution.executors.asyncio import AsyncioExecutor
-
+import conf
 import gql
-from auth import Token, create_access_token, authenticate_user
-from queries import create_volunteer, get_volunteer
-from db import database
+import graphene
+import sqlalchemy
+from db import database, metadata
+from fastapi import FastAPI
 from gqlapp import LessCrappyGQLApp
+from graphql.execution.executors.asyncio import AsyncioExecutor
 
 
 logger = logging.getLogger(__name__)
 
 
 app = FastAPI()
-app.add_route("/",
-              LessCrappyGQLApp(
-                  schema=graphene.Schema(mutation=gql.Mutations),
-                  executor_class=AsyncioExecutor))
+app.add_route(
+    "/",
+    LessCrappyGQLApp(
+        schema=graphene.Schema(mutation=gql.Mutations),
+        executor_class=AsyncioExecutor,
+    ),
+)
 
 
 @app.on_event("startup")
 async def startup():
+    engine = sqlalchemy.create_engine(str(conf.DATABASE_URL))
+    metadata.create_all(engine)
     await database.connect()
 
 

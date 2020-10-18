@@ -5,7 +5,8 @@ import conf
 import db
 from dates import aware_now
 from db import database
-from models import Volunteer
+from models import Volunteer, Password
+import sqlalchemy
 
 
 async def get_volunteer(phone: str):
@@ -16,19 +17,21 @@ async def get_volunteer(phone: str):
         return Volunteer(**volnt)
 
 
-async def flush_password(user: Volunteer):
+async def flush_password(user_with_password):
     query = (
-        db.volunteer.update().
-        where(db.volunteer.c.uid==user.uid).
-        values(
-            password=None,
-            password_expires_at=None,
+        db.password.delete().
+        where(
+            sqlalchemy.and_(
+                db.password.c.volunteer_id==user_with_password["volunteer_id"],
+                db.password.c.password==user_with_password["password"],
+                db.password.c.expires_at==user_with_password["expires_at"],
+            )
         )
     )
     result = await database.execute(query)
 
 
-async def create_volunteer(phone: str, password_hash: str) -> Volunteer:
+async def create_volunteer(phone: str) -> Volunteer:
     query = db.volunteer.insert().values(
         uid=uuid4(),
         fname="",
@@ -37,8 +40,6 @@ async def create_volunteer(phone: str, password_hash: str) -> Volunteer:
         email="",
         phone=phone,
         role="volunteer",
-        password=password_hash,
-        password_expires_at=aware_now() + timedelta(seconds=conf.PASSWORD_EXP_SEC),
     ).returning(db.volunteer.c.uid)
 
     uid = await database.execute(query)
@@ -49,3 +50,20 @@ async def is_blacklisted(token):
     query = db.miserables.select().where(db.miserables.c.token==token)
     found = await database.fetch_one(query)
     return bool(found)
+
+
+async def get_active_password(phone):
+    j = sqlalchemy.join(db.volunteer, db.password, isouter=True)
+    query = sqlalchemy.select([j]).where(
+        db.volunteer.c.phone==phone,
+    ).order_by(db.password.c.expires_at.desc())
+    return await database.fetch_one(query)
+
+
+async def add_password(volunteer: Volunteer, password_hash: str):
+    query = db.password.insert().values(
+        volunteer_id=volunteer.uid,
+        password=password_hash,
+        expires_at=aware_now() + timedelta(seconds=conf.PASSWORD_EXP_SEC),
+    )
+    return await database.execute(query)
