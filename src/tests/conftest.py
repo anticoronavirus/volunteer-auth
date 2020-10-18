@@ -1,20 +1,13 @@
 from uuid import uuid4
-import pytest
-from starlette.config import environ
-from starlette.testclient import TestClient
-from sqlalchemy import create_engine, schema
-from sqlalchemy_utils import database_exists, create_database, drop_database
-from starlette.config import environ
-from models import Volunteer
 
-
-environ["TESTING"] = "True"
-
-
-# these imports absolutely have to follow calls to environ.
-from main import app
-from db import metadata
 import conf
+import pytest
+from db import metadata
+from main import app
+from models import Volunteer
+from sqlalchemy import create_engine, schema
+from sqlalchemy_utils import create_database, database_exists, drop_database
+from starlette.testclient import TestClient
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -39,4 +32,3 @@ def client():
     # using TestClient as context manager inits database connection.
     with TestClient(app) as client:
         yield client
-
