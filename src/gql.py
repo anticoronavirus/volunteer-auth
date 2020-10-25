@@ -133,7 +133,7 @@ class GetJWT(JWTMutation):
             raise GraphQLError("Неверный пароль")
 
         await flush_password(user_with_password)
-        return GetJWT.create_tokens(info, user_with_password["uid"])
+        return GetJWT.create_tokens(info, user_with_password["volunteer_id"])
 
 
 class RefreshJWT(JWTMutation):
