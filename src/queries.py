@@ -1,12 +1,12 @@
-from datetime import timedelta
 import uuid
+from datetime import timedelta
 
 import conf
 import db
+import sqlalchemy
 from dates import aware_now
 from db import database
-from models import Volunteer, Password
-import sqlalchemy
+from models import Volunteer
 
 
 async def get_volunteer(phone: str):
