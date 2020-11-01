@@ -86,7 +86,7 @@ async def get_last_login_attempts(phone: str, limit: int):
         where
           phone = :phone
         order by
-           ctime asc
+           ctime desc
         limit
           :limit
     """

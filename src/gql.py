@@ -144,10 +144,10 @@ class GetJWT(JWTMutation):
         attempts = await get_last_login_attempts(phone164, 5)
         if (
             len(attempts) >= 5
-            and attempts[0]["ctime"] > aware_now() - timedelta(minutes=5)
+            and attempts[-1]["ctime"] > aware_now() - timedelta(minutes=5)
         ):
             return GetJWT(
-                timeout=attempts[0]["ctime"] + timedelta(minutes=30),
+                timeout=attempts[-1]["ctime"] + timedelta(minutes=30),
                 authenticated=False
             )
 
