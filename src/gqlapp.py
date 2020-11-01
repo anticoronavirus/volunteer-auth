@@ -104,5 +104,4 @@ class LessCrappyGQLApp(GraphQLApp):
 
     #     request = Request(scope, receive=receive)
     #     response = await self.handle_graphql(request)
-    #     import pdb; pdb.set_trace()
     #     await response(scope, receive, send)

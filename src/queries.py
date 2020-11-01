@@ -75,8 +75,6 @@ async def add_password(volunteer_id: uuid.UUID, password_hash: str):
         expires_at=aware_now() + timedelta(seconds=conf.PASSWORD_EXP_SEC),
         ctime=aware_now(),
     )
-    import pdb; pdb.set_trace()
-    
     return await database.execute(query)
 
 
