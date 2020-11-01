@@ -54,7 +54,7 @@ async def is_blacklisted(token):
 
 async def get_last_volunteer_passwords(phone, limit):
     query = """
-        select p.volunteer_id, p.password, p.expires_at, p.ctime
+        select v.uid, p.password, p.expires_at, p.ctime
         from volunteer v
         left outer join les.password p
           on p.volunteer_id = v.uid
