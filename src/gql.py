@@ -68,7 +68,7 @@ class RequestPassword(graphene.Mutation):
 
         attempts = await get_last_volunteer_passwords(parsed_phone, 3)
         last_attempt = attempts[0]
-        volunteer_id = last_attempt['volunteer_id']
+        volunteer_id = last_attempt['uid']
         if not volunteer_id:
             volunteer_id = await create_volunteer(parsed_phone)
         elif last_attempt["ctime"]:
