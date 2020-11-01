@@ -4,7 +4,7 @@ on:
     branches:
     - master
     - develop
-    - feature/sms-timeout
+    - smstimeout
 jobs:
   build:
     runs-on: ubuntu-latest
