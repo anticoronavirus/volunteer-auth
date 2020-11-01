@@ -14,7 +14,7 @@ from dates import aware_now
 from db import database
 from graphql import GraphQLError
 from queries import (add_password, create_volunteer, flush_password,
-                     get_active_password, get_volunteer, is_blacklisted)
+                     get_volunteer_with_password, get_volunteer, is_blacklisted)
 from schema import Phone
 from sms import aero
 
@@ -59,16 +59,25 @@ class RequestPassword(graphene.Mutation):
         phone = graphene.String()
 
     status = graphene.String()
+    timeout = graphene.DateTime()
 
     @staticmethod
     async def mutate(root, info, phone):
+        parsed_phone = Phone(phone=phone).phone
+        volunteer = await get_volunteer_with_password(parsed_phone)
+        if not volunteer:
+            volunteer = await create_volunteer(parsed_phone)
+        elif volunteer["ctime"]:
+            timeout_end = volunteer["ctime"] + timedelta(minutes=1)
+            if timeout_end >= aware_now():
+                return RequestPassword(
+                    status="failed",
+                    timeout=timeout_end,
+                )
+
         password = make_password()
         password_hash = get_password_hash(password)
-        await RequestPassword.upsert_volunteer_with_password(
-            # raises error if phone string is not valid.
-            Phone(phone=phone).phone,
-            password_hash,
-        )
+        await add_password(volunteer["uid"], password_hash)
         message = await aero.send_bool(
             phone,
             "NEWS",
@@ -78,14 +87,6 @@ class RequestPassword(graphene.Mutation):
             return RequestPassword(status="failed")
         else:
             return RequestPassword(status="ok")
-
-    @staticmethod
-    async def upsert_volunteer_with_password(phone: str, password_hash: str):
-        volunteer = await get_volunteer(phone)
-        if not volunteer:
-            volunteer = await create_volunteer(phone)
-
-        await add_password(volunteer, password_hash)
 
 
 class JWTMutation(graphene.Mutation):
@@ -120,7 +121,7 @@ class GetJWT(JWTMutation):
     @staticmethod
     async def mutate(root, info, phone, password):
         phone164 = Phone(phone=phone).phone
-        user_with_password = await get_active_password(phone164)
+        user_with_password = await get_volunteer_with_password(phone164)
 
         if not user_with_password:
             raise GraphQLError("Нет такого пользователя.")

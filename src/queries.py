@@ -1,5 +1,5 @@
 from datetime import timedelta
-from uuid import uuid4
+import uuid
 
 import conf
 import db
@@ -31,9 +31,9 @@ async def flush_password(user_with_password):
     result = await database.execute(query)
 
 
-async def create_volunteer(phone: str) -> Volunteer:
+async def create_volunteer(phone: str) -> dict:
     query = db.volunteer.insert().values(
-        uid=uuid4(),
+        uid=uuid.uuid4(),
         fname="",
         mname="",
         lname="",
@@ -43,7 +43,7 @@ async def create_volunteer(phone: str) -> Volunteer:
     ).returning(db.volunteer.c.uid)
 
     uid = await database.execute(query)
-    return Volunteer(phone=phone, uid=uid)
+    return {"phone": phone, "uid": uid}
 
 
 async def is_blacklisted(token):
@@ -52,19 +52,26 @@ async def is_blacklisted(token):
     return bool(found)
 
 
-async def get_active_password(phone):
-    j = sqlalchemy.join(db.volunteer, db.password, isouter=True)
-    query = sqlalchemy.select([j]).where(
-        db.volunteer.c.phone==phone,
-    ).order_by(db.password.c.expires_at.desc())
-    return await database.fetch_one(query)
+async def get_volunteer_with_password(phone):
+    query = """
+        select v.*, p.password, p.expires_at, p.ctime
+        from volunteer v
+        left outer join les.password p
+          on p.volunteer_id = v.uid
+        where
+          v.phone = :phone
+        order by
+          p.expires_at desc
+    """
+    return await database.fetch_one(query, {"phone": phone})
 
 
-async def add_password(volunteer: Volunteer, password_hash: str):
+async def add_password(volunteer_id: uuid.UUID, password_hash: str):
     query = db.password.insert().values(
-        uid=uuid4(),
-        volunteer_id=volunteer.uid,
+        uid=uuid.uuid4(),
+        volunteer_id=volunteer_id,
         password=password_hash,
         expires_at=aware_now() + timedelta(seconds=conf.PASSWORD_EXP_SEC),
+        ctime=aware_now(),
     )
     return await database.execute(query)

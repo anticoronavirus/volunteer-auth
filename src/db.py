@@ -37,7 +37,11 @@ password = sa.Table(
     sa.Column(
         "expires_at",
         sa.TIMESTAMP(timezone=True),
-        nullable=True
+        nullable=True,
+    ),
+    sa.Column(
+        "ctime",
+        sa.TIMESTAMP(timezone=True),
     ),
     schema=conf.TOKEN_SCHEMA_NAME,
 )
