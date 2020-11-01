@@ -34,14 +34,15 @@ password = sa.Table(
     sa.Column("uid", UUID, primary_key=True),
     sa.Column("volunteer_id", UUID, sa.ForeignKey("volunteer.uid")),
     sa.Column("password", sa.String, nullable=True),
-    sa.Column(
-        "expires_at",
-        sa.TIMESTAMP(timezone=True),
-        nullable=True,
-    ),
-    sa.Column(
-        "ctime",
-        sa.TIMESTAMP(timezone=True),
-    ),
+    sa.Column("expires_at", sa.TIMESTAMP(timezone=True), nullable=True),
+    sa.Column("ctime", sa.TIMESTAMP(timezone=True)),
+    schema=conf.TOKEN_SCHEMA_NAME,
+)
+
+login = sa.Table(
+    "login",
+    metadata,
+    sa.Column("phone", sa.String),
+    sa.Column("ctime", sa.TIMESTAMP(timezone=True)),
     schema=conf.TOKEN_SCHEMA_NAME,
 )

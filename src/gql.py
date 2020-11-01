@@ -14,7 +14,8 @@ from dates import aware_now
 from db import database
 from graphql import GraphQLError
 from queries import (add_password, create_volunteer, flush_password,
-                     get_last_volunteer_passwords, get_volunteer, is_blacklisted)
+                     get_last_volunteer_passwords, get_volunteer, is_blacklisted,
+                     get_last_login_attempts, log_login_attempt)
 from schema import Phone
 from sms import aero
 
@@ -129,13 +130,28 @@ class GetJWT(JWTMutation):
         phone = graphene.String()
         password = graphene.String()
 
+    timeout = graphene.DateTime()
+
     @staticmethod
     async def mutate(root, info, phone, password):
         phone164 = Phone(phone=phone).phone
-        user_with_password = await get_volunteer_with_password(phone164)
+        await log_login_attempt(phone164)
+        user_passwords = await get_last_volunteer_passwords(phone164, 1)
 
-        if not user_with_password:
+        if not user_passwords:
             raise GraphQLError("Нет такого пользователя.")
+
+        attempts = await get_last_login_attempts(phone164, 5)
+        if (
+            len(attempts) == 5
+            and attempts[0]["ctime"] > aware_now() - timedelta(minutes=30)
+        ):
+            return GetJWT(
+                timeout=attempts[0]["ctime"] + timedelta(minutes=30),
+                authenticated=False
+            )
+
+        user_with_password = user_passwords[0]
         if (
                 user_with_password["expires_at"] is None
                 or user_with_password["expires_at"] <= aware_now()
