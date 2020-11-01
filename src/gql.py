@@ -78,7 +78,7 @@ class RequestPassword(graphene.Mutation):
                     timeout=timeout_end,
                 )
             if (
-                len(attempts) == 3
+                len(attempts) >= 3
                 and attempts[-1]["ctime"] >= aware_now() - timedelta(minutes=5)
             ):
                 return RequestPassword(
