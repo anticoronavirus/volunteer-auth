@@ -31,7 +31,7 @@ async def flush_password(user_with_password):
     result = await database.execute(query)
 
 
-async def create_volunteer(phone: str) -> dict:
+async def create_volunteer(phone: str) -> uuid.UUID:
     query = db.volunteer.insert().values(
         uid=uuid.uuid4(),
         fname="",
@@ -43,7 +43,7 @@ async def create_volunteer(phone: str) -> dict:
     ).returning(db.volunteer.c.uid)
 
     uid = await database.execute(query)
-    return {"phone": phone, "uid": uid}
+    return uid
 
 
 async def is_blacklisted(token):
@@ -52,9 +52,9 @@ async def is_blacklisted(token):
     return bool(found)
 
 
-async def get_volunteer_with_password(phone):
+async def get_last_volunteer_passwords(phone, limit):
     query = """
-        select v.*, p.password, p.expires_at, p.ctime
+        select p.volunteer_id, p.password, p.expires_at, p.ctime
         from volunteer v
         left outer join les.password p
           on p.volunteer_id = v.uid
@@ -62,8 +62,24 @@ async def get_volunteer_with_password(phone):
           v.phone = :phone
         order by
           p.expires_at desc
+        limit :limit
     """
-    return await database.fetch_one(query, {"phone": phone})
+    return await database.fetch_all(query, {"phone": phone,  "limit": limit})
+
+
+# async def get_volunteer_one_minute_password_left(phone):
+#     query = """
+#         select p.volunteer_id, p.password, p.expires_at, p.ctime
+#         from volunteer v
+#         left outer join les.password p
+#           on p.volunteer_id = v.uid
+#         where
+#           v.phone = :phone
+#         order by
+#           p.expires_at desc
+#         limit 5
+#     """
+#     return await database.fetch_all(query, {"phone": phone})
 
 
 async def add_password(volunteer_id: uuid.UUID, password_hash: str):

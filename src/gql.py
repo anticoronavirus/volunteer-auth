@@ -14,7 +14,7 @@ from dates import aware_now
 from db import database
 from graphql import GraphQLError
 from queries import (add_password, create_volunteer, flush_password,
-                     get_volunteer_with_password, get_volunteer, is_blacklisted)
+                     get_last_volunteer_passwords, get_volunteer, is_blacklisted)
 from schema import Phone
 from sms import aero
 
@@ -64,20 +64,31 @@ class RequestPassword(graphene.Mutation):
     @staticmethod
     async def mutate(root, info, phone):
         parsed_phone = Phone(phone=phone).phone
-        volunteer = await get_volunteer_with_password(parsed_phone)
-        if not volunteer:
-            volunteer = await create_volunteer(parsed_phone)
-        elif volunteer["ctime"]:
-            timeout_end = volunteer["ctime"] + timedelta(minutes=1)
+
+        attempts = await get_last_volunteer_passwords(parsed_phone, 3)
+        last_attempt = attempts[0]
+        volunteer_id = last_attempt['volunteer_id']
+        if not volunteer_id:
+            volunteer_id = await create_volunteer(parsed_phone)
+        elif last_attempt["ctime"]:
+            timeout_end = last_attempt["ctime"] + timedelta(minutes=1)
             if timeout_end >= aware_now():
                 return RequestPassword(
                     status="failed",
                     timeout=timeout_end,
                 )
+            if (
+                len(attempts) == 3
+                and attempts[-1]["ctime"] >= aware_now() - timedelta(minutes=5)
+            ):
+                return RequestPassword(
+                    status="failed",
+                    timeout=last_attempt["ctime"] + timedelta(minutes=30),
+                )
 
         password = make_password()
         password_hash = get_password_hash(password)
-        await add_password(volunteer["uid"], password_hash)
+        await add_password(volunteer_id, password_hash)
         message = await aero.send_bool(
             phone,
             "NEWS",
