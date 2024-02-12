@@ -4,7 +4,7 @@ phonenumbers<8.13
 aiohttp<3.7
 pyJWT<1.8
 passlib[bcrypt]<1.8
-python-multipart==0.0.5
+python-multipart==0.0.7
 sqlalchemy<1.4
 databases<0.3
 asyncpg<0.21
